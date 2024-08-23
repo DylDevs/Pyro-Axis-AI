@@ -8,3 +8,5 @@ Multiple different PyTorch model types are supported, including:
 - Language Classification
 - Object Detection
 - Regression
+
+Please note, this app is currently really broken and msot likely does not work yet.
