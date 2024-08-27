@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 const data = [{name: '1', t_loss: 3.2, v_loss: 4.2}, 
             {name: "2", t_loss: 4.2, v_loss: 5.2},
             {name: "2", t_loss: 5.2, v_loss: 6.2},
@@ -24,12 +24,12 @@ import Cookies from 'js-cookie';
 
 // @ts-ignore | Hide errors from variables
 function CustomTooltip({ payload, label, active }) {
-    if (active) {
+    if (active && payload[0] !== undefined && payload[1] !== undefined) {
         return (
             <div className="custom-tooltip">
                 <Card className="p-4">
                     <p>{`Training Loss: ${payload[0].value}`}</p>
-                    <p className="desc">Anything you want can be displayed here.</p>
+                    <p>{`Validation Loss: ${payload[1].value}`}</p>
                 </Card>
             </div>
         );
@@ -43,10 +43,13 @@ export default function ModelDashboard() {
     const [training_data, setTrainingData] = useState<any>();
 
     const [selected_model, setSelectedModel] = useState(-1);
-    const [timeUntilUpdate, setTimeUntilUpdate] = useState(5);
+    const [last_selected_model, setLastSelectedModel] = useState(-1);
+    const [update_cooldown, setUpdateCooldown] = useState(5);
+    const [timeUntilUpdate, setTimeUntilUpdate] = useState(update_cooldown);
     const [timeUntilUpdateText, setTimeUntilUpdateText] = useState("5 seconds");
     const [update_data, setUpdateData] = useState(false);
     const [getting_data, setGettingData] = useState(false);
+    const [chart_data, setChartData] = useState<any>([]);
 
     const [data_card_size, setDataCardSize] = useState<number>(0);
 
@@ -112,6 +115,25 @@ export default function ModelDashboard() {
                 throw new Error("Failed to get initial model training data! Full traceback: " + data.traceback);
             }
 
+            if (selected_model !== -1) {
+                // Add the new data point
+                const newEntry = {
+                    name: null,
+                    t_loss: data.training_data[selected_model].training_loss,
+                    v_loss: data.training_data[selected_model].val_loss
+                };
+            
+                // Append the new entry and then clip the array to the last 10 entries
+                const updatedChartData = [...chart_data, newEntry].slice(-10);
+
+                updatedChartData.forEach((entry, index) => {
+                    entry.name = index + 1;
+                });
+            
+                // Update the state with the clipped array
+                setChartData(updatedChartData);
+            }
+
             setTrainingData(data.training_data);
             setGettingData(false);
             if (change_update_text) {
@@ -149,6 +171,7 @@ export default function ModelDashboard() {
     }, []); // Empty dependency array to run only once on mount
 
     function HandleSelectedModelChange(index : number) {
+        setChartData([]);
         setSelectedModel(index);
     }
 
@@ -201,7 +224,7 @@ export default function ModelDashboard() {
                         <p className="text-zinc-500">Train a model to get started.</p>
                     </div>
                 )}
-                {selected_model === -1 && (
+                {selected_model === -1 && training_data !== undefined && connected && (
                     <div className="flex flex-col items-center justify-center h-full space-y-2">
                         <h1 className="text-3xl font-bold">No model selected</h1>
                         <p className="text-zinc-500">Select a model on the left bar to get started.</p>
@@ -210,16 +233,49 @@ export default function ModelDashboard() {
                 {training_data !== undefined && selected_model !== -1 && connected && (
                     <div>
                         <h1 className="text-3xl font-bold m-4">{training_data[selected_model].status}</h1>
-                        <LineChart width={data_card_size-50} height={500} data={data} className="">
-                            <Line type="monotone" dataKey="t_loss" stroke="#8884d8" />
-                            <Line type="monotone" dataKey="v_loss" stroke="#82ca9d" />
-                            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            {/* @ts-ignore Hide tooltip error*/}
-                            <Tooltip content={<CustomTooltip/>}/>
-                        </LineChart>
-                        <Separator orientation="horizontal" className="w-[calc(100vw-475px)] "/>
+                        {chart_data.length > 0 ? (
+                            <LineChart width={data_card_size - 50} height={500} data={chart_data}>
+                                <Line type="monotone" dataKey="t_loss" stroke="#8884d8" />
+                                <Line type="monotone" dataKey="v_loss" stroke="#82ca9d" />
+                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                {/* @ts-ignore Hide tooltip error*/}
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                            </LineChart>
+                        ) : (
+                            update_data === true ? (
+                                <div className={`min-w-${data_card_size - 50} min-h-500 m-10 text-center justify-center`}>
+                                    <h1 className="text-3xl font-bold">Please Wait...</h1>
+                                    <p className="text-zinc-500">The data for the graph is being fetched</p>
+                                </div>
+                            ) : (
+                                <div className={`min-w-${data_card_size - 50} min-h-500 m-10 text-center justify-center`}>
+                                    <h1 className="text-3xl font-bold">No Data Available</h1>
+                                    <p className="text-zinc-500">The data for the graph is not available. Enable the update data option.</p>
+                                </div>
+                            )
+                        )}
+                        <Separator orientation="horizontal" className="w-[calc(100vw-475px)] " />
+                        <div className="grid grid-cols-3 m-4">
+                            {Object.keys(training_data[selected_model]).map((key) => {
+                                if (key == "exception") { return null }
+                                const value = training_data[selected_model][key];
+                                const newKey = key.replace(/_./g, (x) => ' ' + x[1].toUpperCase());
+                                const finalKey = newKey.charAt(0).toUpperCase() + newKey.slice(1);
+                                return (
+                                    <div key={key} className="flex flex-col m-2">
+                                        <h1 className="text-2xl font-bold">{finalKey}</h1>
+                                        <p className="text-zinc-500">
+                                            {typeof value === "number" && value % 1 !== 0
+                                                ? value.toFixed(4)
+                                                : value}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </Card>
