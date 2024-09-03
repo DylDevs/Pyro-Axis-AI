@@ -1,10 +1,11 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
 from pydantic import BaseModel
-import logging
-import socket
+from fastapi import FastAPI, Request
+import subprocess
 import threading
 import uvicorn
+import logging
+import socket
 import random
 import os
 
@@ -67,13 +68,21 @@ test_data = [{"status": "Training",
     "training_dataset_accuracy": 0.9,
     "val_dataset_accuracy": 0.8}]
 
+client_connected = False
+client_ip = None
+training_started = False
 @app.get("/")
-async def root():
+async def root(request: Request):
+    global client_connected, client_ip
+    client_ip = request.client.host
+    client_connected = True
     IP, _, webserver_url = GetWebData()
     return {"status": "ok", "url": webserver_url, "ip": IP}
 
 @app.post("/train/{type}")
 async def train(request: TrainRequest):
+    global training_started
+    training_started = True
     hyperparameters = request.hyperparameters
     print(hyperparameters)
     # Process hyperparameters and add new model to queue
@@ -127,22 +136,32 @@ async def shutdown():
     # Shutdown the training server
     return {"status": "ok"}
 
-run_frontend = True
-debug = False
-if not debug:
-    log_level = "error"
-else:
-    log_level = "debug"
-
-def start_backend():
-    IP, frontend_url, webserver_url = GetWebData()
-    print(f"Webserver URL: {webserver_url}")
-    print(f"Frontend URL: {frontend_url}")
+def start_backend(debug):
+    if debug:
+        log_level = "debug"
+    else:
+        log_level = "error"
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level=log_level)
 
 def start_frontend():
-    os.system("cd ui && npm run dev")
+    # Redirect both stdout and stderr to /dev/null
+    subprocess.run("cd ui && npm run dev", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-threading.Thread(target=start_backend).start()
-if run_frontend:
-    threading.Thread(target=start_frontend).start()
+def run(frontend = True, backend = True, debug = False):
+    IP, frontend_url, webserver_url = GetWebData()
+    if backend:
+        threading.Thread(target=start_backend, args=(debug,)).start()
+    else:
+        webserver_url = None
+    if frontend:
+        threading.Thread(target=start_frontend).start()
+    else:
+        frontend_url = None
+    return frontend_url, webserver_url
+
+def WaitForClient():
+    global client_connected
+    while not client_connected:
+        pass
+    return client_ip
+

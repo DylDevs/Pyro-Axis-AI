@@ -47,9 +47,9 @@ class CustomDataset(Dataset):
         channel_encoded = self.encode(channel)[:self.max_length]
         return torch.tensor(message_encoded + channel_encoded), torch.tensor(label)
     
-class ConvolutionalNeuralNetwork(nn.Module):
+class NeuralNetwork(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, dropout_rate, max_length):
-        super(ConvolutionalNeuralNetwork, self).__init__()
+        super(NeuralNetwork, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
         self.fc1 = nn.Linear(2 * max_length * embedding_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
@@ -96,7 +96,7 @@ def SetupModel(hyperparameters):
     hyperparameters.train_dataset, hyperparameters.val_dataset, train_size, val_size = SplitDataset(data, hyperparameters.train_val_ratio, hyperparameters.max_length)
     hyperparameters.vocab_size = len(hyperparameters.train_dataset.vocab) + 1
 
-    model = ConvolutionalNeuralNetwork(hyperparameters.vocab_size, hyperparameters.embedding_dim, hyperparameters.hidden_dim, hyperparameters.classes, hyperparameters.dropout, hyperparameters.max_length)
+    model = NeuralNetwork(hyperparameters.vocab_size, hyperparameters.embedding_dim, hyperparameters.hidden_dim, hyperparameters.classes, hyperparameters.dropout, hyperparameters.max_length)
     train_dataloader = DataLoader(hyperparameters.train_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_train, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
     val_dataloader = DataLoader(hyperparameters.val_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_val, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
     scaler = GradScaler()
