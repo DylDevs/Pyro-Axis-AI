@@ -41,6 +41,7 @@ export default function TrainModel() {
         switch (type) {
             case "language_classification":
                 return {
+                    data_path: "data/train/",
                     num_epochs: 100,
                     batch_size: 32,
                     classes: 3,
@@ -61,6 +62,7 @@ export default function TrainModel() {
                 };
             case "image_classification":
                 return {
+                    data_path: "data/train/",
                     num_epochs: 100,
                     batch_size: 64,
                     classes: 3,

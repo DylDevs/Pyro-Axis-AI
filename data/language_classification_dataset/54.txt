@@ -1,0 +1,3 @@
+The ShadCN integration has a minor bug. Any help?
+support
+0

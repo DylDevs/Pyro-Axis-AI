@@ -89,7 +89,7 @@ def SplitDataset(data, train_val_ratio, max_length):
 
     return train_dataset, val_dataset, train_amount, val_amount
 
-def SetupModel(hyperparameters):
+def ModelSetup(hyperparameters):
     data = load_data(hyperparameters.data_path)
     hyperparameters.max_length = GetMaxLength(data)
 

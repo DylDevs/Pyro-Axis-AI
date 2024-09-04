@@ -5,8 +5,10 @@ import torch.optim.lr_scheduler as lr_scheduler
 from pydantic import BaseModel
 import torch.optim as optim
 import torch.nn as nn
+import traceback
 import random
 import torch
+import time
 import os
 
 def load_data(data_folder):
@@ -47,9 +49,9 @@ class CustomDataset(Dataset):
         channel_encoded = self.encode(channel)[:self.max_length]
         return torch.tensor(message_encoded + channel_encoded), torch.tensor(label)
     
-class ConvolutionalNeuralNetwork(nn.Module):
+class NeuralNetwork(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, dropout_rate, max_length):
-        super(ConvolutionalNeuralNetwork, self).__init__()
+        super(NeuralNetwork, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
         self.fc1 = nn.Linear(2 * max_length * embedding_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
@@ -89,20 +91,105 @@ def SplitDataset(data, train_val_ratio, max_length):
 
     return train_dataset, val_dataset, train_amount, val_amount
 
-def SetupModel(hyperparameters):
-    data = load_data(hyperparameters.data_path)
-    hyperparameters.max_length = GetMaxLength(data)
+# If the hyperparameters do not have these keys, it will raise an error
+hyperparameters_keys = ["num_epochs", "batch_size", "classes", "learning_rate", "max_learning_rate",
+    "train_val_ratio", "num_workers", "dropout", "patience", "shuffle_train", "shuffle_val",
+    "shuffle_each_epoch", "pin_memory", "drop_last", "cache", "embedding_dim", "hidden_dim"]
 
-    hyperparameters.train_dataset, hyperparameters.val_dataset, train_size, val_size = SplitDataset(data, hyperparameters.train_val_ratio, hyperparameters.max_length)
-    hyperparameters.vocab_size = len(hyperparameters.train_dataset.vocab) + 1
-
-    model = ConvolutionalNeuralNetwork(hyperparameters.vocab_size, hyperparameters.embedding_dim, hyperparameters.hidden_dim, hyperparameters.classes, hyperparameters.dropout, hyperparameters.max_length)
-    train_dataloader = DataLoader(hyperparameters.train_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_train, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
-    val_dataloader = DataLoader(hyperparameters.val_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_val, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
-    scaler = GradScaler()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=hyperparameters.learning_rate)
-    scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=hyperparameters.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=hyperparameters.num_epochs)
-
-def Train():
+class MissingHyperparametersException(Exception):
     pass
+
+def Setup(hyperparameters, device : torch.device):
+    for key in hyperparameters_keys:
+        if key not in hyperparameters:
+            return MissingHyperparametersException(f"Missing key '{key}' in hyperparameters"), None
+
+    try:
+        data = load_data(hyperparameters.data_path)
+        hyperparameters.max_length = GetMaxLength(data)
+        hyperparameters.train_dataset, hyperparameters.val_dataset, train_size, val_size = SplitDataset(data, hyperparameters.train_val_ratio, hyperparameters.max_length)
+        hyperparameters.vocab_size = len(hyperparameters.train_dataset.vocab) + 1
+
+        model = NeuralNetwork(hyperparameters.vocab_size, hyperparameters.embedding_dim, hyperparameters.hidden_dim, hyperparameters.classes, hyperparameters.dropout, hyperparameters.max_length)
+        train_dataloader = DataLoader(hyperparameters.train_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_train, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
+        val_dataloader = DataLoader(hyperparameters.val_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_val, num_workers=hyperparameters.num_workers, pin_memory=hyperparameters.pin_memory, drop_last=hyperparameters.drop_last)
+        scaler = GradScaler()
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=hyperparameters.learning_rate)
+        scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=hyperparameters.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=hyperparameters.num_epochs)
+    except Exception as e:
+        return e, None
+
+    # Your train loop should accept this data as an argument
+    model_data = {
+        "model": model,
+        "train_dataloader": train_dataloader,
+        "val_dataloader": val_dataloader,
+        "criterion": criterion,
+        "optimizer": optimizer,
+        "scaler": scaler,
+        "scheduler": scheduler,
+        "train_size": train_size,
+        "val_size": val_size,
+        "device": device,
+        "hyperparameters": hyperparameters
+    }
+
+    return "ok", model_data
+
+class MissingDataException(Exception):
+    pass
+
+def Train(model_data : dict):
+    try:
+        model = model_data["model"]
+        train_dataloader = model_data["train_dataloader"]
+        val_dataloader = model_data["val_dataloader"]
+        criterion = model_data["criterion"]
+        optimizer = model_data["optimizer"]
+        scaler = model_data["scaler"]
+        scheduler = model_data["scheduler"]
+        train_size = model_data["train_size"]
+        val_size = model_data["val_size"]
+        hyperparameters = model_data["hyperparameters"]
+    except Exception as e:
+        return MissingDataException(e)
+
+    epoch_training_start_time = time.time()
+    if hyperparameters.shuffle_each_epoch: 
+        train_dataloader = DataLoader(hyperparameters.train_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_train)
+        val_dataloader = DataLoader(hyperparameters.val_dataset, batch_size=hyperparameters.batch_size, shuffle=hyperparameters.shuffle_val)
+
+    # Training phase
+    model.train()
+    running_training_loss = 0.0
+    for i, data in enumerate(train_dataloader, 0):
+        inputs, labels = data[0].to(model_data["device"], non_blocking=True), data[1].to(model_data["device"], non_blocking=True)
+        optimizer.zero_grad()
+        with autocast():
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+        scheduler.step()
+        running_training_loss += loss.item()
+    running_training_loss /= len(train_dataloader)
+    training_loss = running_training_loss
+    model_data["training_loss"] = training_loss
+
+    # Validation phase
+    model.eval()
+    running_validation_loss = 0.0
+    with torch.no_grad(), autocast():
+        for i, data in enumerate(val_dataloader, 0):
+            inputs, labels = data[0].to(model_data["device"], non_blocking=True), data[1].to(model_data["device"], non_blocking=True)
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            running_validation_loss += loss.item()
+    running_validation_loss /= len(val_dataloader)
+    validation_loss = running_validation_loss
+    model_data["val_loss"] = validation_loss
+
+    torch.cuda.empty_cache()
+    return model_data

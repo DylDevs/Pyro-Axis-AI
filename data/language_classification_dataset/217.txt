@@ -1,0 +1,3 @@
+I've updated the TypeScript definitions for better accuracy.
+dev
+0

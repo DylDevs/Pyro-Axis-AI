@@ -1,0 +1,3 @@
+I've updated the TypeScript definitions for better accuracy.
+off-topic
+0

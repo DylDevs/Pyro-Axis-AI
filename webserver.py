@@ -1,6 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 import subprocess
 import threading
 import uvicorn
@@ -37,36 +37,7 @@ app.add_middleware(
 class TrainRequest(BaseModel):
     hyperparameters: dict
 
-test_data = [{"status": "Training",
-    "type": "Object Detection",
-    "exception": None,
-    "epoch": 1,
-    "epoch_start_time": 0.12345,
-    "training_loss": 0.12345678910,
-    "val_loss": 0.10987654321,
-    "elapsed": 1234.567,
-    "time_per_epoch": 12.34}, 
-    {"status": "Queued",
-    "type": "Image Classification",
-    "exception": None,
-    "epoch": 0,
-    "epoch_start_time": 0,
-    "training_loss": 0,
-    "val_loss": 0,
-    "elapsed": 0,
-    "time_per_epoch": 0},
-    {"status": "Finished",
-    "type": "Language Classification",
-    "stop_type": "manual",
-    "best_epoch": 80,
-    "epoch": 100,
-    "bext_training_loss": 0,
-    "best_val_loss": 0,
-    "training_start_time": 0.12345,
-    "training_end_time": 1.2345,
-    "elapsed": 1234.56,
-    "training_dataset_accuracy": 0.9,
-    "val_dataset_accuracy": 0.8}]
+training_sessions = []
 
 client_connected = False
 client_ip = None
@@ -79,27 +50,31 @@ async def root(request: Request):
     IP, _, webserver_url = GetWebData()
     return {"status": "ok", "url": webserver_url, "ip": IP}
 
-@app.post("/train/{type}")
-async def train(request: TrainRequest):
+@app.post("/train/{model_type}")
+async def train(model_type: str, request: TrainRequest):
     global training_started
-    training_started = True
     hyperparameters = request.hyperparameters
-    print(hyperparameters)
-    # Process hyperparameters and add new model to queue
+    training_started = True
+
+    session = TrainingSession(model_type, hyperparameters)
+    setup_status = session.setup()
+    if setup_status != "ok":
+        if isinstance(setup_status, Exception):
+            setup_status = str(setup_status)
+
+        return {"status": "error", "exception": setup_status}
+    
+    training_sessions.append(session)
     return {"status": "ok"}
 
 @app.get("/models")
 async def get_models():
     # Return list of models and their status
-    for i in range(len(test_data)):
-        test_data[i]["training_loss"] = random.uniform(0, 3)
-        test_data[i]["val_loss"] = random.uniform(0, 3)
-    return {"status": "ok", "training_data": test_data}
+    data = []
+    for model in training_sessions:
+        data.append(model.GetModelStatus())
 
-@app.get("/models/{model_id}")
-async def get_model(model_id):
-    # Return status of a specific model
-    return {"status": "ok"}
+    return {"status": "ok", "training_data": data}
 
 @app.get("/models/{model_id}/stop_save")
 async def stop_and_save_model(model_id):
@@ -115,6 +90,8 @@ async def stop_model(model_id):
 async def stop_all_models():
     # Stop training of all models and do not save them
     return {"status": "ok"}
+
+# TODO: Impliment saved_models endpoint on frontend
 
 @app.get("/saved_models/")
 async def get_saved_models():
@@ -159,8 +136,10 @@ def run(frontend = True, backend = True, debug = False):
         frontend_url = None
     return frontend_url, webserver_url
 
-def WaitForClient():
-    global client_connected
+# Need to get the training session class as an arg due to circular import issues
+def WaitForClient(training_session):
+    global client_connected, TrainingSession
+    TrainingSession = training_session
     while not client_connected:
         pass
     return client_ip

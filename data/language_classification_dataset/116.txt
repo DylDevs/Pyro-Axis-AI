@@ -1,0 +1,3 @@
+I've improved the TypeScript interfaces for better performance.
+support
+0

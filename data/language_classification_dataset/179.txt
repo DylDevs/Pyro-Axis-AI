@@ -1,0 +1,3 @@
+The lane assist doesn't work properly at high speeds. Is this normal?
+support
+0
