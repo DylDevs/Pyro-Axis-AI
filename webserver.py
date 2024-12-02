@@ -22,8 +22,8 @@ def GetWebData():
     webserver_url = f"http://{IP}:8000"
     return IP, frontend_url, webserver_url
 
-app = FastAPI(title="PyTorch AI Training", 
-    description="Webservers to handle connection between PyTorch train code and client",
+app = FastAPI(title="Torch AI Training", 
+    description="Webservers to handle connection between Torch train code and client",
     version="0.0.1")
 
 app.add_middleware(
@@ -62,8 +62,9 @@ async def train(model_type: str, request: TrainRequest):
         if isinstance(setup_status, Exception):
             setup_status = str(setup_status)
 
-        return {"status": "error", "exception": setup_status}
+        return {"status": "error", "traceback": setup_status}
     
+    session.start_training()
     training_sessions.append(session)
     return {"status": "ok"}
 
@@ -143,4 +144,3 @@ def WaitForClient(training_session):
     while not client_connected:
         pass
     return client_ip
-

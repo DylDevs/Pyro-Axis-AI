@@ -1,21 +1,18 @@
 import type { AppProps } from 'next/app';
 import { ThemeProvider } from '@/components/theme_provider';
-import { PyTorchMenubar } from '@/components/menubar';
-import { Card } from '@/components/ui/card';
 import { Loading } from '@/components/loading';
 import { useEffect, useState, useCallback } from 'react'; 
 import { toast, Toaster } from 'sonner';
 import { Metadata } from 'next';
 import { AttemptServerConnection } from '@/components/connect_to_server';
-import CommandMenu from '@/components/command_menu';
 import '@/styles/globals.css';
 
 // @ts-ignore | Prevents module not found error from js-cookie, even though it is installed
 import Cookies from 'js-cookie';
 
 export const metadata: Metadata = {
-    title: "PyTorch AI Training",
-    description: "Frontend UI for PyTorch AI Training",
+    title: "Torch AI Training",
+    description: "Frontend UI for Torch AI Training",
     icons: ["favicon.ico"],
 };
 
@@ -71,11 +68,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     toast.promise(
       new Promise<void>(async (resolve, reject) => {
         try {
-          await setupConnection();
+          // await setupConnection();
           setTimeout(() => {
             setShowLoading(false);
             resolve();
-          }, 2000);
+          }, 5000);
           console.log("Connected to training server at " + webserver_url);
         } catch (error) {
           reject(error);
@@ -93,19 +90,12 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider defaultTheme="dark" attribute="class">
-      <Toaster position="bottom-right" theme="dark" richColors={true} closeButton={true} />
-      <CommandMenu />
-      <div className="m-3">
-        <PyTorchMenubar />
-      </div>
       <div className="flex flex-row gap-3 m-3">
-          {showLoading ? 
-            <Loading loading_text="Connecting to server..." />
-            : <Component {...pageProps} />}
+        {showLoading && <Loading loading_text="Connecting to server..." />}
+        <div style={{ display: showLoading ? "none" : "block" }} className='overflow-hidden'>
+          <Component {...pageProps} />
+        </div>
       </div>
-      <p className="text-center text-sm">
-        PyTorch Training Controller - V1.0.0 | Unpublished Work © 2024 - GNU GPLv3 License
-      </p>
     </ThemeProvider>
   );
 }
