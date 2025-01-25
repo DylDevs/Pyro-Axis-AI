@@ -4,26 +4,19 @@ import { Loading } from '@/components/loading';
 import { useEffect, useState, useCallback } from 'react'; 
 import { toast, Toaster } from 'sonner';
 import { Metadata } from 'next';
-import { AttemptServerConnection } from '@/components/connect_to_server';
+import { AttemptServerConnection } from '@/components/webserver';
 import '@/styles/globals.css';
 
 // @ts-ignore | Prevents module not found error from js-cookie, even though it is installed
 import Cookies from 'js-cookie';
 
 export const metadata: Metadata = {
-    title: "Torch AI Training",
-    description: "Frontend UI for Torch AI Training",
+    title: "Pyro Axis AI Training",
+    description: "Frontend UI for Pyro Axis AI Training",
     icons: ["favicon.ico"],
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const clear_cache = false;
-  if (clear_cache) {
-    Cookies.remove('ip');
-    Cookies.remove('webserver_url');
-    Cookies.remove('frontend_url');
-    Cookies.remove('connected');
-  }
   const [showLoading, setShowLoading] = useState(true);
 
   // Initialize the cookie with a default value if it does not exist
@@ -68,11 +61,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     toast.promise(
       new Promise<void>(async (resolve, reject) => {
         try {
-          // await setupConnection();
+          await setupConnection();
           setTimeout(() => {
             setShowLoading(false);
             resolve();
-          }, 5000);
+          }, 2500);
           console.log("Connected to training server at " + webserver_url);
         } catch (error) {
           reject(error);
@@ -90,6 +83,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider defaultTheme="dark" attribute="class">
+      <Toaster position="bottom-right" theme="dark" richColors={true} closeButton={true} duration={5000} />
       <div className="flex flex-row gap-3 m-3">
         {showLoading && <Loading loading_text="Connecting to server..." />}
         <div style={{ display: showLoading ? "none" : "block" }} className='overflow-hidden'>

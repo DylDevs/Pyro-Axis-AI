@@ -1,13 +1,19 @@
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request
-from pydantic import BaseModel
-import subprocess
-import threading
-import uvicorn
-import logging
-import socket
-import random
-import os
+from fastapi.middleware.cors import CORSMiddleware # FastAPI Middleware
+from fastapi import FastAPI, Request, Body # FastAPI Framework and utilities
+from typing import Any # Used for type hinting
+import subprocess # Used for running commands in the terminal
+import threading # Used for running functions asynchronously
+import uvicorn # Used for running FastAPI
+import socket # Used for getting local IP
+
+import modelTypes.modules as modules # Modules and utilities for training models
+from modelTypes.modules import print # Edited print function with color and reprint
+
+training_controllers : list[modules.TrainingController] = []
+model_loader : modules.ModelTypeLoader = None
+def SetModelLoader(loader : modules.ModelTypeLoader):
+    global model_loader
+    model_loader = loader
 
 def GetWebData():
     try:
@@ -22,7 +28,7 @@ def GetWebData():
     webserver_url = f"http://{IP}:8000"
     return IP, frontend_url, webserver_url
 
-app = FastAPI(title="Torch AI Training", 
+app = FastAPI(title="Pyro Axis AI Training", 
     description="Webservers to handle connection between Torch train code and client",
     version="0.0.1")
 
@@ -33,11 +39,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-class TrainRequest(BaseModel):
-    hyperparameters: dict
-
-training_sessions = []
 
 client_connected = False
 client_ip = None
@@ -50,69 +51,57 @@ async def root(request: Request):
     IP, _, webserver_url = GetWebData()
     return {"status": "ok", "url": webserver_url, "ip": IP}
 
-@app.post("/train/{model_type}")
-async def train(model_type: str, request: TrainRequest):
-    global training_started
-    hyperparameters = request.hyperparameters
-    training_started = True
-
-    session = TrainingSession(model_type, hyperparameters)
-    setup_status = session.setup()
-    if setup_status != "ok":
-        if isinstance(setup_status, Exception):
-            setup_status = str(setup_status)
-
-        return {"status": "error", "traceback": setup_status}
-    
-    session.start_training()
-    training_sessions.append(session)
-    return {"status": "ok"}
-
-@app.get("/models")
+@app.get("/get_models")
 async def get_models():
-    # Return list of models and their status
+    global model_loader
+    model_types = model_loader.GetModelTypes()
+    model_types_dict = []
+
+    if not isinstance(model_types, list): raise TypeError("Model types must be a list of model types")
+    for model_type in model_types:
+        if not isinstance(model_type, modules.Model): raise TypeError("Model type must be an instance of Model")
+        model_types_dict.append(model_type.to_dict())
+    return {"status": "ok", "models": model_types_dict}
+
+# Hyperparameters will be {"model_index": x, "hyperparameters": {"name": value}}
+@app.post("/train")
+def train(data: Any = Body(...)):
+    global model_loader, training_controllers
+    model_types = model_loader.GetModelTypes()
+    hyps = []
+
+    model_index = data["model_index"]
+    hyperparameters = data["hyperparameters"]
+
+    for key, value in hyperparameters.items():
+        hyps.append(modules.Hyperparameter(key, value))
+    
+    parent_model : modules.Model = model_types[model_index]
+    training_model = modules.Model(
+        name=parent_model.name,
+        description=parent_model.description,
+        data_type=parent_model.data_type,
+        model_class=parent_model.model_class,
+        hyperparameters=hyps
+    )
+
+    print(f"Request to train {training_model.name} received", color=modules.Colors.BLUE)
+    training_controller = modules.TrainingController(training_model)
+    if training_controller.error: return {"status": "error", "error": training_controller.error, "traceback": training_controller.traceback}
+    training_controller.Train()
+    training_controllers.append(training_controller)
+
+    return {"status": "ok"}
+
+@app.get("/status")
+def status():
+    global training_controllers
     data = []
-    for model in training_sessions:
-        data.append(model.GetModelStatus())
-
-    return {"status": "ok", "training_data": data}
-
-@app.get("/models/{model_id}/stop_save")
-async def stop_and_save_model(model_id):
-    # Stop the training of a specific model and save it
-    return {"status": "ok"}
-
-@app.get("/models/{model_id}/stop")
-async def stop_model(model_id):
-    # Stop the training of a specific model and do not save it
-    return {"status": "ok"}
-
-@app.get("/models/stop_all")
-async def stop_all_models():
-    # Stop training of all models and do not save them
-    return {"status": "ok"}
-
-# TODO: Impliment saved_models endpoint on frontend
-
-@app.get("/saved_models/")
-async def get_saved_models():
-    # Return list of saved models and their parameters
-    return {"status": "ok"}
-
-@app.get("/saved_models/{saved_model_id}/delete")
-async def delete_model(saved_model_id):
-    # Delete a saved model
-    return {"status": "ok"}
-
-@app.get("/saved_models/{saved_model_id}")
-async def get_saved_model(saved_model_id):
-    # Return status of a specific saved model
-    return {"status": "ok"}
-
-@app.get("/shutdown")
-async def shutdown():
-    # Shutdown the training server
-    return {"status": "ok"}
+    for training_controller in training_controllers:
+        data.append(training_controller.GetFrontendData())
+    print(f"Status Data: {data}")
+    
+    return {"status": "ok", "data": data}
 
 def start_backend(debug):
     if debug:
@@ -137,10 +126,8 @@ def run(frontend = True, backend = True, debug = False):
         frontend_url = None
     return frontend_url, webserver_url
 
-# Need to get the training session class as an arg due to circular import issues
-def WaitForClient(training_session):
-    global client_connected, TrainingSession
-    TrainingSession = training_session
+def WaitForClient():
+    global client_connected
     while not client_connected:
         pass
     return client_ip

@@ -1,0 +1,13 @@
+# Cache
+cache
+**/__pycache__
+
+# VSCode
+.vscode
+
+# Node
+ui/node_modules
+
+# Demo Images
+neural_network.png
+tensorboard_scalars.png

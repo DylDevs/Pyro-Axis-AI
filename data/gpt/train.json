@@ -1,0 +1,881 @@
+{
+    "questions_and_answers": [
+        {
+        "question": "What are the four components of the FIRST LEGO League challenge?",
+        "answer": "Core Values, Robot Design, Innovation Project, and Robot Game."
+        },
+        {
+        "question": "How long does a Robot Game match last?",
+        "answer": "Each match lasts 2.5 minutes."
+        },
+        {
+        "question": "What does the Core Values section evaluate in the competition?",
+        "answer": "It evaluates teamwork, innovation, impact, inclusion, and having fun."
+        },
+        {
+        "question": "What should teams use as a guide for their season?",
+        "answer": "Teams should use the Engineering Notebook."
+        },
+        {
+        "question": "What does the mission 'Coral Nursery' entail?",
+        "answer": "Teams secure new coral structures in the nursery and score points if coral trees are hanging or if coral buds are flipped up."
+        },
+        {
+        "question": "What is the Equipment Inspection?",
+        "answer": "An inspection to ensure all robot and equipment fit within one launch area and under 12 inches height."
+        },
+        {
+        "question": "How many matches does each team play in the robot game?",
+        "answer": "Each team plays three matches."
+        },
+        {
+        "question": "What is Gracious Professionalism®?",
+        "answer": "A core value that encourages teams to be kind, helpful, and cooperative while competing."
+        },
+        {
+        "question": "What is the goal of the Innovation Project?",
+        "answer": "To identify and research a problem and design a solution."
+        },
+        {
+        "question": "What is a precision token?",
+        "answer": "A token that teams lose if they interrupt their robot outside of home. Teams start with six tokens."
+        },
+        {
+        "question": "What happens if the robot interrupts a mission outside of home?",
+        "answer": "A precision token is lost, and the robot must be re-launched."
+        },
+        {
+        "question": "What is the scoring condition for the mission 'Shark'?",
+        "answer": "If the shark is not touching the cave or is partly in the shark habitat, points are awarded."
+        },
+        {
+        "question": "How many points are awarded for raising the shipwreck’s mast in the 'Raise the Mast' mission?",
+        "answer": "30 points."
+        },
+        {
+        "question": "What must teams do in the 'Angler Fish' mission?",
+        "answer": "Guide the angler fish back to the shipwreck to score 30 points."
+        },
+        {
+        "question": "What is a match?",
+        "answer": "A 2.5-minute period where teams complete missions to earn points."
+        },
+        {
+        "question": "How can a team earn points in the 'Unexpected Encounter' mission?",
+        "answer": "Teams must release the unknown creature and deliver it to the cold seep for points."
+        },
+        {
+        "question": "What is considered 'in' when a mission requires something to be 'completely in'?",
+        "answer": "The lines and airspace above the area count as 'in.'"
+        },
+        {
+        "question": "How many points does a team earn if their robot and equipment fit into just one launch area?",
+        "answer": "The team earns 20 points."
+        },
+        {
+        "question": "What happens if a team cannot run their robot during a match?",
+        "answer": "They can still earn Gracious Professionalism® points by explaining the situation."
+        },
+        {
+        "question": "What is a mission model?",
+        "answer": "LEGO models that the robot interacts with during the robot game."
+        },
+        {
+        "question": "What is the purpose of the 'Field Setup' video?",
+        "answer": "To show how to set up the field for practice and competitions."
+        },
+        {
+        "question": "How are ties broken in the competition?",
+        "answer": "Ties are broken using second and third best scores."
+        },
+        {
+        "question": "What is the maximum height for equipment during inspection?",
+        "answer": "12 inches (305 mm)."
+        },
+        {
+        "question": "What is an interruption?",
+        "answer": "When technicians interact with the robot after it is launched."
+        },
+        {
+        "question": "What are the three mission zones in the 'SUBMERGED™' challenge?",
+        "answer": "The sunlight zone, twilight zone, and midnight zone."
+        },
+        {
+        "question": "How can teams earn points in the 'Send over the Submersible' mission?",
+        "answer": "By lowering their yellow flag and getting the submersible closer to the opposing field."
+        },
+        {
+        "question": "How is scoring done after a match?",
+        "answer": "The referee documents results, and the best score from the three matches counts toward advancement."
+        },
+        {
+        "question": "How many motors can a robot have in one match?",
+        "answer": "A maximum of four motors."
+        },
+        {
+        "question": "What is a 'Home Area' in the robot game?",
+        "answer": "The area where technicians can interact with the robot and equipment."
+        },
+        {
+        "question": "What must teams avoid doing with mission models during the match?",
+        "answer": "They must not break, combine, or separate mission models."
+        },
+        {
+        "question": "How many points can be earned for keeping all precision tokens?",
+        "answer": "50 points."
+        },
+        {
+        "question": "What can teams bring for program notes during a match?",
+        "answer": "One sheet of notebook paper per home area."
+        },
+        {
+        "question": "What must happen at the end of the match for mission points to count?",
+        "answer": "Mission requirements must be visible."
+        },
+        {
+        "question": "What is the objective of the 'Kraken's Treasure' mission?",
+        "answer": "To retrieve the treasure chest from the kraken's nest."
+        },
+        {
+        "question": "What happens if a team interferes with the opposing field?",
+        "answer": "Points failed or lost due to interference are awarded to the other team."
+        },
+        {
+        "question": "What does the term 'Launch' refer to in the robot game?",
+        "answer": "The moment technicians activate the robot to move autonomously."
+        },
+        {
+        "question": "What sensors are allowed in the robot game?",
+        "answer": "Touch/force, color, distance/ultrasonic, and gyro sensors."
+        },
+        {
+        "question": "How can teams earn points in the 'Artificial Habitat' mission?",
+        "answer": "By stacking artificial habitat segments upright."
+        },
+        {
+        "question": "What is the objective of the 'Feed the Whale' mission?",
+        "answer": "To feed krill to the whale."
+        },
+        {
+        "question": "What is the maximum number of controllers allowed in one match?",
+        "answer": "One controller."
+        },
+        {
+        "question": "What must teams use to score in the 'Sample Collection' mission?",
+        "answer": "Teams must collect and deliver water, seabed, plankton, and trident samples."
+        },
+        {
+        "question": "What must happen for a team's score to be official?",
+        "answer": "The team and referee must agree on the results."
+        },
+        {
+        "question": "What happens if a referee cannot make a clear decision during a match?",
+        "answer": "The team gets the benefit of the doubt."
+        },
+        {
+        "question": "What can teams not use during the match?",
+        "answer": "Remote controllers of any type."
+        },
+        {
+        "question": "What is the challenge theme for the year?",
+        "answer": "The 'SUBMERGED™' theme, focused on ocean exploration."
+        },
+        {
+        "question": "What type of objects must the robot interact with in the robot game?",
+        "answer": "Mission models made of LEGO."
+        },
+        {
+        "question": "What must teams check regularly throughout the season?",
+        "answer": "Updates to the rules, missions, or field setup."
+        },
+        {
+        "question": "How many samples can be placed in the research vessel's cargo area in the 'Research Vessel' mission?",
+        "answer": "Teams earn points for each sample, trident part, or treasure chest in the vessel's cargo area."
+        },
+        {
+        "question": "What must teams avoid using when programming their robots?",
+        "answer": "Remote controllers or any form of manual operation during the match."
+        },
+        {
+        "question": "What is the Engineering Notebook used for?",
+        "answer": "It serves as a guide for teams' journey and a resource for judging."
+        },
+        {
+        "question": "How many points can be earned in the 'Sonar Discovery' mission for revealing one whale?",
+        "answer": "20 points."
+        },
+        {
+        "question": "What are teams allowed to cut when using LEGO pieces?",
+        "answer": "LEGO string and pneumatic tubes may be cut to length."
+        },
+        {
+        "question": "What should teams build to practice for the robot game?",
+        "answer": "The mission models using the official Mission Model Building Instructions."
+        },
+        {
+        "question": "What is required in the 'Shark' mission for maximum points?",
+        "answer": "The shark must be no longer touching the cave for 20 points."
+        },
+        {
+        "question": "What are the possible scores for Gracious Professionalism®?",
+        "answer": "ACCOMPLISHED (3 points), EXCEEDS (4 points), DEVELOPING (2 points)."
+        },
+        {
+        "question": "How do teams earn points in the 'Change Shipping Lanes' mission?",
+        "answer": "By moving the cargo ship to the new shipping lane and touching the mat."
+        },
+        {
+        "question": "What happens if a robot breaks or combines with a mission model?",
+        "answer": "Points will not count unless the mission model is returned to its original condition."
+        },
+        {
+        "question": "What is the required condition for a treasure chest in the 'Kraken’s Treasure' mission?",
+        "answer": "The treasure chest must be completely outside the kraken's nest."
+        },
+        {
+        "question": "How can teams prepare their field mat?",
+        "answer": "By setting it up either on the floor or building a table using the Optional Table Building Instructions."
+        },
+        {
+        "question": "What is the height limit for the team's equipment during a match?",
+        "answer": "Equipment must be under 12 inches (305 mm)."
+        },
+        {
+        "question": "What sensors are allowed during the robot game?",
+        "answer": "Touch/force, color, distance/ultrasonic, and gyro sensors."
+        },
+        {
+        "question": "What should a team do if a mission model is placed incorrectly on the field?",
+        "answer": "They must follow the rules for model placement; otherwise, points will not count."
+        },
+        {
+        "question": "What is the term used when technicians interact with their robot after it is launched?",
+        "answer": "Interruption."
+        },
+        {
+        "question": "What are teams allowed to use to program their robot?",
+        "answer": "Any software or programming language."
+        },
+        {
+        "question": "How does a team earn points for the 'Scuba Diver' mission?",
+        "answer": "By moving the scuba diver to hang on the coral reef support."
+        },
+        {
+        "question": "What is required to score in the 'Sample Collection' mission?",
+        "answer": "Collect and deliver samples like water, seabed, and plankton."
+        },
+        {
+        "question": "What is required for a robot to launch?",
+        "answer": "Technicians must activate the robot from within a launch area."
+        },
+        {
+        "question": "What must be done to earn points in the 'Research Vessel' mission?",
+        "answer": "Samples or artifacts must be securely docked in the vessel’s cargo area."
+        },
+        {
+        "question": "What happens when a team loses a precision token?",
+        "answer": "Their score for precision tokens decreases."
+        },
+        {
+        "question": "How many mission models are there in the robot game?",
+        "answer": "Fifteen mission models."
+        },
+        {
+        "question": "What is the objective of the 'Angler Fish' mission?",
+        "answer": "Guide the angler fish to the shipwreck for 30 points."
+        },
+        {
+        "question": "What happens if a team cannot run their robot but attends the match?",
+        "answer": "They may still earn Gracious Professionalism® points."
+        },
+        {
+        "question": "What must teams check regularly for updates during the season?",
+        "answer": "The official rulebook and challenge updates."
+        },
+        {
+        "question": "How many points are awarded for completing the 'Sonar Discovery' mission with both whales?",
+        "answer": "10 points for each whale revealed."
+        },
+        {
+        "question": "What is the height limit for equipment at the pre-match inspection?",
+        "answer": "12 inches (305 mm)."
+        },
+        {
+        "question": "What must be done to score points in the 'Unexpected Encounter' mission?",
+        "answer": "The unknown creature must be released and delivered to the cold seep."
+        },
+        {
+        "question": "What are the two home areas used for during the robot game?",
+        "answer": "They allow technicians to interact with the robot and equipment."
+        },
+        {
+        "question": "How does a team score in the 'Coral Reef' mission?",
+        "answer": "By flipping up the coral reef or placing segments upright on the mat."
+        },
+        {
+        "question": "How many robots can a team use during a match?",
+        "answer": "One robot."
+        },
+        {
+        "question": "What is the objective of the 'Artificial Habitat' mission?",
+        "answer": "Rearrange habitat stacks to create safe homes for sea creatures."
+        },
+        {
+        "question": "How many points can a team score in the 'Feed the Whale' mission?",
+        "answer": "10 points for each krill placed in the whale’s mouth."
+        },
+        {
+        "question": "What are teams allowed to do with LEGO wires?",
+        "answer": "Teams may use LEGO wires as part of their equipment."
+        },
+        {
+        "question": "What must be done to score in the 'Raise the Mast' mission?",
+        "answer": "The shipwreck's mast must be completely raised."
+        },
+        {
+        "question": "What is the role of referees in the robot game?",
+        "answer": "Referees evaluate the team's robot game performance and Gracious Professionalism®."
+        },
+        {
+        "question": "How can teams score in the 'Send over the Submersible' mission?",
+        "answer": "Lower the yellow flag and move the submersible closer to the opposing field."
+        },
+        {
+        "question": "What is the goal of the 'Shark' mission?",
+        "answer": "To release the shark back into its habitat."
+        },
+        {
+        "question": "What is the precision token rule in the robot game?",
+        "answer": "Teams start with six precision tokens, and each interruption outside of home results in the loss of one token."
+        },
+        {
+        "question": "What happens if a mission model is broken or combined with the robot?",
+        "answer": "Points will not count unless the mission model is returned to its original condition."
+        },
+        {
+        "question": "How can a team earn points in the 'Change Shipping Lanes' mission?",
+        "answer": "By moving the ship to a new lane and touching the mat."
+        },
+        {
+        "question": "What is required for a mission to score at the end of a match?",
+        "answer": "Mission requirements must be visible at the end of the match."
+        },
+        {
+        "question": "How many points are awarded if the submersible is closer to the opposing field in the 'Send over the Submersible' mission?",
+        "answer": "10 points."
+        },
+        {
+        "question": "How does a team earn Gracious Professionalism® points?",
+        "answer": "By demonstrating cooperation, inclusion, and professionalism during the match."
+        },
+        {
+        "question": "What happens if the team robot or equipment does not fit in the launch area during pre-match inspection?",
+        "answer": "The team will not earn the 20 points for the equipment inspection."
+        },
+        {
+        "question": "What is the maximum number of samples that can be scored in the 'Research Vessel' mission?",
+        "answer": "Teams earn points for each sample, trident part, or treasure chest in the vessel's cargo area."
+        },
+        {
+        "question": "What happens at the end of a match when scoring begins?",
+        "answer": "Technicians must stop their robot, and referees will document results for scoring."
+        },
+        {
+        "question": "How is the best score of a team determined in a tournament?",
+        "answer": "Only the best score of the three official matches counts toward awards and advancement."
+        },
+        {
+        "question": "What’s the point of the 'Innovation Project' in the competition?",
+        "answer": "It’s all about coming up with a solution to a real-world problem, then presenting it in a creative way."
+        },
+        {
+        "question": "How long do you get to run your robot in a match?",
+        "answer": "Each match is 2.5 minutes long, so it’s pretty fast-paced!"
+        },
+        {
+        "question": "What do they mean by 'Core Values'?",
+        "answer": "It's the stuff like teamwork, inclusion, and having fun that they want you to focus on throughout the competition."
+        },
+        {
+        "question": "What should we do if our robot gets stuck outside of home during a match?",
+        "answer": "You can stop it, but you’ll lose a precision token if you do, and you’ll need to re-launch it from home."
+        },
+        {
+        "question": "How do we score points in the 'Coral Nursery' mission?",
+        "answer": "You get points for securing coral trees in the right spots and making sure the coral buds are flipped up."
+        },
+        {
+        "question": "How many chances do we get to show off what our robot can do?",
+        "answer": "You get three matches, and only the best score counts."
+        },
+        {
+        "question": "What’s 'Gracious Professionalism®'?",
+        "answer": "It’s about competing hard, but always being kind, respectful, and helping others when you can."
+        },
+        {
+        "question": "Why do we need to fit everything into one launch area during inspection?",
+        "answer": "If you can fit your robot and equipment in one area and keep it under 12 inches tall, you’ll earn an extra 20 points."
+        },
+        {
+        "question": "What’s the deal with precision tokens?",
+        "answer": "You start with six, and if you stop your robot outside of home, you lose one. The more you keep by the end of the match, the more points you score."
+        },
+        {
+        "question": "How can we earn points in the 'Shark' mission?",
+        "answer": "You get points if the shark is no longer touching its cave, and more points if it’s at least partly in the shark habitat."
+        },
+        {
+        "question": "What’s the 'Angler Fish' mission all about?",
+        "answer": "You’ve got to guide the angler fish back to the shipwreck. If it latches onto the shipwreck, you score 30 points."
+        },
+        {
+        "question": "How do ties get broken in the competition?",
+        "answer": "They use your second and third best scores to break the tie."
+        },
+        {
+        "question": "How can we get points in the 'Feed the Whale' mission?",
+        "answer": "By placing krill into the whale’s mouth. Each krill gets you 10 points."
+        },
+        {
+        "question": "What is considered 'in' for a mission to count?",
+        "answer": "Anything inside the lines or in the airspace above the area counts as 'in' unless the mission says otherwise."
+        },
+        {
+        "question": "Can we bring extra mission models to the field?",
+        "answer": "Nope! You can only use the official models, no extras or duplicates allowed."
+        },
+        {
+        "question": "What’s the point of the 'Raise the Mast' mission?",
+        "answer": "You need to raise the shipwreck’s mast all the way up to score 30 points."
+        },
+        {
+        "question": "What are we allowed to use to program our robot?",
+        "answer": "You can use any programming language or software you like."
+        },
+        {
+        "question": "How do we handle a situation where the referee’s decision isn’t clear?",
+        "answer": "If it's unclear, you get the benefit of the doubt."
+        },
+        {
+        "question": "What happens if our robot interferes with the other team’s field?",
+        "answer": "If you interfere, the points the other team lost will automatically be added to their score."
+        },
+        {
+        "question": "Can we use a remote control to help the robot during a match?",
+        "answer": "No, the robot has to run autonomously—no remote control allowed."
+        },
+        {
+        "question": "What’s the goal of the 'Kraken's Treasure' mission?",
+        "answer": "You have to retrieve the treasure chest from the kraken’s nest. If the chest is completely outside the nest, you score 20 points."
+        },
+        {
+        "question": "What do we do if the robot drops a mission model outside of home?",
+        "answer": "Leave it unless the robot moves it again. Or, you can remove it, but then you have to give it to the referee for the rest of the match."
+        },
+        {
+        "question": "How do we earn points in the 'Sample Collection' mission?",
+        "answer": "You score by collecting water, seabed, plankton, and trident samples and getting them out of their designated areas."
+        },
+        {
+        "question": "What’s the 'Unexpected Encounter' mission about?",
+        "answer": "You need to release the unknown creature from the AUV and get it to the cold seep for points."
+        },
+        {
+        "question": "How can we score points in the 'Change Shipping Lanes' mission?",
+        "answer": "You move the cargo ship to a different lane to help it avoid whale migration routes. If it touches the mat in the new lane, you score."
+        },
+        {
+        "question": "What happens if we don’t finish setting up our robot before the match starts?",
+        "answer": "You won’t get extra time, but you can ask the referee to check your setup beforehand if you have concerns."
+        },
+        {
+        "question": "How do we score in the 'Artificial Habitat' mission?",
+        "answer": "You rearrange the habitat segments to make them safe for the crabs and sea creatures, and you get points for each segment that’s upright."
+        },
+        {
+        "question": "What happens if we break a mission model?",
+        "answer": "You’ll lose points for that mission unless you can return the model to its original condition."
+        },
+        {
+        "question": "How do we score in the 'Sonar Discovery' mission?",
+        "answer": "You need to reveal the whales using sonar. Revealing one whale gets you 20 points, and both whales get you an extra 10 points."
+        },
+        {
+        "question": "What’s the purpose of the 'Research Vessel' mission?",
+        "answer": "You collect and secure samples and artifacts in the research vessel’s cargo area to score points."
+        },
+        {
+        "question": "What happens if we mess up and miss a launch?",
+        "answer": "If you explain what happened, you might still earn Gracious Professionalism® points, even if your robot doesn’t run."
+        },
+        {
+        "question": "What should we do if our robot doesn’t fit under the height limit during inspection?",
+        "answer": "You won’t get the 20 points for fitting into one launch area, but you can still compete if you adjust your setup."
+        },
+        {
+        "question": "How do we handle multiple technicians during a match?",
+        "answer": "You can have two technicians on each side of the field, but they can switch places during the match if needed."
+        },
+        {
+        "question": "How can we score extra points with the submersible in the 'Send over the Submersible' mission?",
+        "answer": "If the submersible moves closer to the opposing field, you score 10 extra points."
+        },
+        {
+        "question": "How can we track our score during the season?",
+        "answer": "Use the official scoring calculator to keep track of your points as you practice."
+        },
+        {
+        "question": "What should we do if the robot malfunctions in the middle of a mission?",
+        "answer": "You can interrupt it, but remember, you’ll lose a precision token."
+        },
+        {
+        "question": "How does the 'Equipment Inspection' work?",
+        "answer": "The referee checks if your robot and equipment fit into one launch area under the height limit. If it does, you earn 20 points."
+        },
+        {
+        "question": "What is the role of 'Technicians' during the match?",
+        "answer": "They handle the robot, launch it, and manage all the equipment during the game."
+        },
+        {
+        "question": "What happens if we interfere with the opposing team’s robot?",
+        "answer": "You can’t interfere unless it’s part of a specific mission. Otherwise, the opposing team will automatically get points for any losses due to interference."
+        },
+        {
+        "question": "How do we earn points in the 'Coral Reef' mission?",
+        "answer": "You get points by flipping up the coral reef and placing segments upright outside of home on the mat."
+        },
+        {
+        "question": "What happens if we interrupt the robot during a mission?",
+        "answer": "If the robot is outside home when you interrupt it, you’ll lose a precision token and need to re-launch it."
+        },
+        {
+        "question": "Why do we need to fit everything in one launch area before the match?",
+        "answer": "Because if you can fit all your robot equipment into one launch area and keep it under 12 inches tall, you’ll get 20 extra points right off the bat."
+        },
+        {
+        "question": "What’s the 'Sample Collection' mission all about?",
+        "answer": "Your robot needs to collect water, seabed, and plankton samples, plus parts of a trident, and get them out of their zones to score points."
+        },
+        {
+        "question": "How do we make sure we get points in the 'Raise the Mast' mission?",
+        "answer": "You need to make sure the shipwreck’s mast is completely raised—only then do you score those 30 points."
+        },
+        {
+        "question": "How many precision tokens do we start with in the match?",
+        "answer": "You start with six precision tokens, and if you don’t interrupt your robot much, you can keep them and score up to 50 points."
+        },
+        {
+        "question": "What’s the purpose of the 'Shark' mission?",
+        "answer": "You have to make sure the shark is released from the cave and ends up at least partly in its habitat."
+        },
+        {
+        "question": "Can we use any LEGO pieces we want during the match?",
+        "answer": "Yes, as long as they’re LEGO pieces in original condition. The only exceptions are LEGO string and pneumatic tubes, which you can cut to size."
+        },
+        {
+        "question": "How can we earn extra points in the 'Send over the Submersible' mission?",
+        "answer": "If you lower your team’s yellow flag and get the submersible closer to the opposing team’s field, you score an extra 30 points."
+        },
+        {
+        "question": "What happens if we can’t run our robot during the match?",
+        "answer": "You might still get Gracious Professionalism® points if you explain the issue and show good sportsmanship."
+        },
+        {
+        "question": "How do we score points in the 'Sonar Discovery' mission?",
+        "answer": "You need to use sonar to reveal the whales. One whale earns you 20 points, and both whales get you 10 extra points."
+        },
+        {
+        "question": "What’s the point of 'Gracious Professionalism®'?",
+        "answer": "It’s about playing fair, helping others, and showing respect no matter how competitive things get."
+        },
+        {
+        "question": "What’s the 'Kraken’s Treasure' mission about?",
+        "answer": "You need to retrieve the treasure chest from the kraken’s nest. The chest must be fully outside the nest to score."
+        },
+        {
+        "question": "What happens if we stop our robot before it completes a mission?",
+        "answer": "You’ll lose a precision token, but you can re-launch the robot after you fix whatever caused you to stop it."
+        },
+        {
+        "question": "How do we score points in the 'Unexpected Encounter' mission?",
+        "answer": "You need to safely release the unknown creature from the AUV and deliver it to the cold seep for extra points."
+        },
+        {
+        "question": "How do we earn points in the 'Artificial Habitat' mission?",
+        "answer": "You get points for each artificial habitat stack that is standing upright with the crab safely above its base."
+        },
+        {
+        "question": "What’s the best strategy for getting a high score in the robot game?",
+        "answer": "Focus on completing missions that score the most points, but make sure to plan ahead so your robot can handle multiple missions in one run."
+        },
+        {
+        "question": "What are some things we need to watch out for during the match?",
+        "answer": "Make sure you don’t break or combine mission models with your robot and try not to interfere with the other team’s field."
+        },
+        {
+        "question": "How do we earn points in the 'Research Vessel' mission?",
+        "answer": "You earn points for placing samples, trident parts, or the treasure chest securely in the research vessel’s cargo area."
+        },
+        {
+        "question": "What should we do if the referee’s decision isn’t clear during the match?",
+        "answer": "If the referee’s call is unclear or hard to make, your team gets the benefit of the doubt, so don’t worry too much!"
+        },
+        {
+        "question": "What’s the deal with the 'Shark' mission?",
+        "answer": "You need to get the shark out of the cave and into its habitat to score points."
+        },
+        {
+        "question": "What happens if we break one of the mission models during the match?",
+        "answer": "If you break a mission model, you’ll lose points unless you can return it to its original condition."
+        },
+        {
+        "question": "What’s the 'Feed the Whale' mission about?",
+        "answer": "Your robot needs to feed krill to the whale. Each krill placed in the whale’s mouth earns you 10 points."
+        },
+        {
+        "question": "What do we do if our robot drops something outside home?",
+        "answer": "If it’s outside home, leave it unless your robot can move it again, or you can remove it by hand, but you’ll need to give it to the referee for the rest of the match."
+        },
+        {
+        "question": "How can we earn points in the 'Angler Fish' mission?",
+        "answer": "Guide the angler fish back to the shipwreck, and if it latches onto the shipwreck, you score 30 points."
+        },
+        {
+        "question": "Can we use multiple robots during the match?",
+        "answer": "No, you can only use one robot during the match, but you can attach different tools and parts to it."
+        },
+        {
+        "question": "What’s the objective of the 'Coral Nursery' mission?",
+        "answer": "You need to secure coral trees to the support structure and flip the coral buds up to earn points."
+        },
+        {
+        "question": "What’s the point of having precision tokens?",
+        "answer": "Precision tokens help you avoid interruptions. You start with six, and if you don’t interfere much, you can earn up to 50 points."
+        },
+        {
+        "question": "What’s the 'Change Shipping Lanes' mission?",
+        "answer": "You need to adjust the cargo ship’s route to avoid whale migration lanes. You score if the ship touches the mat in the new lane."
+        },
+        {
+        "question": "What happens if we interfere with the other team’s robot?",
+        "answer": "You can’t interfere with the other team’s robot unless it’s part of a mission. If you do interfere, the other team gets points for anything they lose."
+        },
+        {
+        "question": "What should we use to keep track of our score?",
+        "answer": "You can use the official scoring calculator to keep track of points as you practice."
+        },
+        {
+        "question": "How do we score points in the 'Sample Collection' mission?",
+        "answer": "You collect water, seabed, plankton, and trident samples, and make sure they’re no longer touching their original zones."
+        },
+        {
+        "question": "What should we do if we can’t finish a mission before the match ends?",
+        "answer": "Even if you don’t finish, make sure the mission’s requirements are visible at the end of the match to get points."
+        },
+        {
+        "question": "How can we score extra points with precision tokens?",
+        "answer": "You can earn up to 50 points by keeping as many of the six precision tokens as possible by the end of the match."
+        },
+        {
+        "question": "What happens if we miss launching our robot on time?",
+        "answer": "You’ll miss out on time to score, but you can still launch the robot as long as the match hasn’t ended."
+        },
+        {
+        "question": "How do we earn points in the 'Artificial Habitat' mission?",
+        "answer": "Rearrange the habitat stacks so that each segment is upright, and the crabs are safe in their homes."
+        },
+        {
+        "question": "What’s the main goal in the 'SUBMERGED™' challenge?",
+        "answer": "You’ll be exploring ocean zones, from coral reefs to shipwrecks, and completing missions to score as many points as possible."
+        },
+        {
+        "question": "How many matches do we get to play during the competition?",
+        "answer": "Each team gets three matches, and only your best score counts toward the final results."
+        },
+        {
+        "question": "What’s the 'Scuba Diver' mission about?",
+        "answer": "You help the scuba diver move coral from the nursery to the reef. You score points if the scuba diver is no longer touching the coral nursery."
+        },
+        {
+        "question": "How do we score points in the 'Sonar Discovery' mission?",
+        "answer": "Use sonar to reveal one whale for 20 points, or both whales for an extra 10 points."
+        },
+        {
+        "question": "What happens if we can’t finish setting up before the match starts?",
+        "answer": "You’ll need to work with what you’ve got, but you can ask the referee for a check before the match begins if you’re worried."
+        },
+        {
+        "question": "What’s the 'Research Vessel' mission?",
+        "answer": "You need to securely dock the research vessel with collected samples, trident parts, or the treasure chest to score points."
+        },
+        {
+        "question": "How can we get Gracious Professionalism® points?",
+        "answer": "By showing good sportsmanship, helping others, and keeping a positive attitude throughout the match."
+        },
+        {
+        "question": "How do we earn points in the 'Scuba Diver' mission?",
+        "answer": "You score points by getting the scuba diver away from the coral nursery and hanging onto the coral reef support."
+        },
+        {
+        "question": "What should we do if the robot gets stuck while it’s outside home?",
+        "answer": "You can stop the robot, but you’ll lose a precision token. After that, you can re-launch it from home."
+        },
+        {
+        "question": "What’s the 'Coral Nursery' mission about?",
+        "answer": "You need to secure coral trees in the nursery and flip the coral buds up to earn points."
+        },
+        {
+        "question": "How can we get points in the 'Kraken's Treasure' mission?",
+        "answer": "Your robot has to retrieve the treasure chest from the kraken's nest. You get points if the chest is completely outside the nest."
+        },
+        {
+        "question": "What’s the best strategy for the 'Raise the Mast' mission?",
+        "answer": "Make sure the mast on the shipwreck is fully raised by the end of the match to get the full 30 points."
+        },
+        {
+        "question": "What’s the point of Gracious Professionalism®?",
+        "answer": "It’s all about competing with respect, helping others, and keeping things positive, even when things get tough."
+        },
+        {
+        "question": "How many points do we get for keeping all our precision tokens?",
+        "answer": "If you manage to keep all six precision tokens, you’ll get 50 points."
+        },
+        {
+        "question": "What should we do if our robot malfunctions during a mission?",
+        "answer": "You can stop it, but you’ll lose a precision token. Fix the problem and re-launch it from home."
+        },
+        {
+        "question": "How do we score in the 'Feed the Whale' mission?",
+        "answer": "Your robot has to feed krill into the whale’s mouth. You get 10 points for each krill you feed it."
+        },
+        {
+        "question": "What happens if we interfere with the other team’s robot?",
+        "answer": "You’re not allowed to interfere unless it’s part of a mission. If you do, the other team will get points for anything they lose."
+        },
+        {
+        "question": "What should we do if we don’t have enough time to finish setting up?",
+        "answer": "You won’t get extra setup time, but if you’re worried about something, ask the referee to check it before the match starts."
+        },
+        {
+        "question": "How do we get points in the 'Sonar Discovery' mission?",
+        "answer": "You reveal one whale for 20 points, and if you reveal both, you get an extra 10 points."
+        },
+        {
+        "question": "What’s the 'Artificial Habitat' mission about?",
+        "answer": "You need to rearrange habitat stack segments and make sure they’re upright to create safe homes for crabs and other sea creatures."
+        },
+        {
+        "question": "How do we earn points in the 'Change Shipping Lanes' mission?",
+        "answer": "You need to move the cargo ship into the new shipping lane. If it touches the mat, you score points."
+        },
+        {
+        "question": "What happens if we don’t finish a mission before time’s up?",
+        "answer": "As long as the mission’s requirements are visible at the end of the match, you’ll still get the points."
+        },
+        {
+        "question": "What’s the 'Unexpected Encounter' mission about?",
+        "answer": "You have to release an unknown creature from the AUV and deliver it to the cold seep to score points."
+        },
+        {
+        "question": "What’s the purpose of the 'Sample Collection' mission?",
+        "answer": "You collect samples like water, seabed, and plankton, and make sure they’re no longer touching their original areas to score."
+        },
+        {
+        "question": "How do we keep track of our score during practice?",
+        "answer": "You can use the official scoring calculator to keep track of points and see where you can improve."
+        },
+        {
+        "question": "How can we earn points in the 'Research Vessel' mission?",
+        "answer": "You score by docking the research vessel with samples, trident parts, or the treasure chest securely inside."
+        },
+        {
+        "question": "What’s the 'Angler Fish' mission about?",
+        "answer": "You need to guide the angler fish back to the shipwreck. If it latches onto the shipwreck, you score 30 points."
+        },
+        {
+        "question": "How do we earn points in the 'Coral Reef' mission?",
+        "answer": "You need to flip the coral reef up and place reef segments upright outside of home to score."
+        },
+        {
+        "question": "What’s the 'Shark' mission?",
+        "answer": "Your robot needs to make sure the shark is no longer touching its cave and at least partly inside its habitat to get points."
+        },
+        {
+        "question": "What should we do if a mission model is placed incorrectly?",
+        "answer": "Make sure all mission models are set up correctly. If they aren’t, points for that mission won’t count."
+        },
+        {
+        "question": "What’s the 'Send over the Submersible' mission?",
+        "answer": "You need to lower your team’s yellow flag and move the submersible closer to the opposing field to score extra points."
+        },
+        {
+        "question": "What should we do if the referee’s decision isn’t clear?",
+        "answer": "If a call is unclear or too close to make, your team will get the benefit of the doubt."
+        },
+        {
+        "question": "How can we earn points in the 'Sonar Discovery' mission?",
+        "answer": "Use sonar to reveal one whale for 20 points, or reveal both for an extra 10 points."
+        },
+        {
+        "question": "What should we do if our robot doesn’t fit under the height limit?",
+        "answer": "You won’t get the 20 points for equipment inspection, but you can still adjust your setup and continue."
+        },
+        {
+        "question": "What happens if we interrupt the robot outside of home?",
+        "answer": "You’ll lose a precision token, and you’ll need to re-launch the robot from home."
+        },
+        {
+        "question": "What’s the 'Kraken's Treasure' mission about?",
+        "answer": "You need to retrieve the treasure chest from the kraken’s nest. Make sure it’s completely outside the nest to score points."
+        },
+        {
+        "question": "How do we earn points in the 'Research Vessel' mission?",
+        "answer": "You score points for every sample or treasure chest placed in the research vessel’s cargo area."
+        },
+        {
+        "question": "What’s the goal of the 'SUBMERGED™' challenge?",
+        "answer": "You’ll be exploring different ocean zones, completing missions to earn points, and showing off your robot’s skills."
+        },
+        {
+        "question": "How do we make sure our missions score at the end of a match?",
+        "answer": "Mission requirements need to be visible at the end of the match for the points to count."
+        },
+        {
+        "question": "How many robots can we use in the match?",
+        "answer": "You can only use one robot during the match, but you can switch out attachments and tools as needed."
+        },
+        {
+        "question": "What happens if we break a mission model during the match?",
+        "answer": "If you break a mission model, you’ll lose points for that mission unless you return it to its original condition."
+        },
+        {
+        "question": "What’s the 'Scuba Diver' mission about?",
+        "answer": "You need to move the scuba diver from the coral nursery to the reef. You score points if they’re no longer touching the nursery."
+        },
+        {
+        "question": "What should we do if the robot drops something outside of home?",
+        "answer": "Leave it unless the robot can move it again. Or, you can remove it by hand, but you’ll need to give it to the referee for the rest of the match."
+        },
+        {
+        "question": "How do we get points in the 'Angler Fish' mission?",
+        "answer": "Guide the angler fish to latch onto the shipwreck, and you’ll get 30 points."
+        },
+        {
+        "question": "How can we earn points with precision tokens?",
+        "answer": "Keep as many of the six tokens as you can by the end of the match to earn up to 50 points."
+        },
+        {
+        "question": "What’s the best way to get a high score in the robot game?",
+        "answer": "Focus on missions with higher point values, and plan ahead so your robot can handle multiple missions in one run."
+        },
+        {
+        "question": "How do ties get broken during the competition?",
+        "answer": "Ties are broken by using your second and third best match scores."
+        },
+        {
+        "question": "What should we do if we miss launching our robot on time?",
+        "answer": "You’ll lose out on some time, but as long as the match is still going, you can launch the robot when you’re ready."
+        }
+    ]
+}
+  
