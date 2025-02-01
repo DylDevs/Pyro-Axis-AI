@@ -1,0 +1,7 @@
+input: .
+output: .retype
+branding:
+  title: Pyro Axis AI
+  label: Docs
+footer:
+  copyright: "&copy; Pyro Axis AI {{ year }}. All rights reserved."
