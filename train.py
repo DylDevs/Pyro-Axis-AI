@@ -1,6 +1,6 @@
 def run():
-    from modelTypes.modules import print # Edited print function with color and reprint
-    from modelTypes import modules # Modules and utilities for training models
+    from model_types.modules import print # Edited print function with color and reprint
+    from model_types import modules # Modules and utilities for training models
     import utils.webserver as webserver # Local webserver
     import utils.window as window # Creates a window for the frontend
 
@@ -26,7 +26,7 @@ def run():
 
     # Path vars
     PATH = os.path.dirname(__file__)
-    MODEL_TYPES_PATH = PATH + "/modelTypes"
+    MODEL_TYPES_PATH = PATH + "/model_types"
     if os.path.exists(os.path.join(MODEL_TYPES_PATH, "__pycache__")):
         shutil.rmtree(os.path.join(MODEL_TYPES_PATH, "__pycache__"))
 

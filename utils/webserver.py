@@ -8,8 +8,8 @@ import socket # Used for getting local IP
 import json # Used for parsing JSON
 import os # Used for file management
 
-import modelTypes.modules as modules # Modules and utilities for training models
-from modelTypes.modules import print # Edited print function with color and reprint
+import model_types.modules as modules # Modules and utilities for training models
+from model_types.modules import print # Edited print function with color and reprint
 
 training_controllers : list[modules.TrainingController] = []
 model_loader : modules.ModelTypeLoader = None

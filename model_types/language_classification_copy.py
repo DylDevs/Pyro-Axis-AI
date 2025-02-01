@@ -13,10 +13,10 @@ import time
 import os
 
 # Resources to create models for the Pyro Axis AI Training Hub
-from modelTypes.modules import *
+from model_types.modules import *
 
-name = "Language Classification"
-description = "Generates a number based on input text"
+name = "Language Classification 2"
+description = "Generates a number based on input text (copy model for testing)"
 data_type = "text" # The type of data the model is trained on (text, image, audio, other)
 hyperparameters = [
     Hyperparameter("Data Path", fr"{os.path.dirname(os.path.dirname(__file__))}\data\language_classification", special_type="path", description="Path where the training data is stored"),
@@ -57,9 +57,7 @@ class NeuralNetwork(nn.Module):
 class Model(ModelTemplate):
     def __init__(self, hyperparameters : HyperparameterFetcher) -> None:
         self.hyperparameters : HyperparameterFetcher = hyperparameters
-        self.device : torch.device = torch.device("cuda" if self.GetHyp("Device") == "GPU" else "cpu")
-        self.model_data = []
-        self.additional_training_data = []
+        self.device : torch.device = torch.device("cuda" if self.GetHyp("device") == "GPU" else "cpu")
 
         self.training_loss = []
         self.validation_loss = []
@@ -167,10 +165,10 @@ class Model(ModelTemplate):
         return train_dataset, val_dataset, train_amount, val_amount
     
     def CreateTrainDataLoader(self):
-        self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.GetHyp("Batch Size"), shuffle=self.GetHyp("Shuffle Train"), num_workers=self.GetHyp("Num Workers"), pin_memory=self.GetHyp("Pin Memory"), drop_last=self.GetHyp("Drop Last"))
+        self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.GetHyp("batch_size"), shuffle=self.GetHyp("shuffle_train"), num_workers=self.GetHyp("num_workers"), pin_memory=self.GetHyp("pin_memory"), drop_last=self.GetHyp("drop_last"))
     
     def CreateValDataLoader(self):
-        self.val_dataloader = DataLoader(self.val_dataset, batch_size=self.GetHyp("Batch Size"), shuffle=self.GetHyp("Shuffle Val"), num_workers=self.GetHyp("Num Workers"), pin_memory=self.GetHyp("Pin Memory"), drop_last=self.GetHyp("Drop Last"))
+        self.val_dataloader = DataLoader(self.val_dataset, batch_size=self.GetHyp("batch_size"), shuffle=self.GetHyp("shuffle_val"), num_workers=self.GetHyp("num_workers"), pin_memory=self.GetHyp("pin_memory"), drop_last=self.GetHyp("drop_last"))
 
     def GetModelSize(model : nn.Module):
         """Get the estimated size of a model in MB."""
@@ -186,13 +184,13 @@ class Model(ModelTemplate):
     def Initialize(self):
         """This function sets up the model and data for training. (Called by the training controller)"""
         try:
-            data = self.load_data(self.GetHyp("Data Folder"))
+            data = self.load_data(self.GetHyp("data_folder"))
             self.data_length = len(data)
             max_length = self.GetMaxLength(data)
 
-            self.model = NeuralNetwork(vocab_size, self.GetHyp("Embedding Dim"), self.GetHyp("Hidden Dim"), self.GetHyp("Classes"), self.GetHyp("Dropout"), self.GetHyp("Max Length"))
+            self.model = NeuralNetwork(vocab_size, self.GetHyp("embedding_dim"), self.GetHyp("hidden_dim"), self.GetHyp("classes"), self.GetHyp("dropout"), self.GetHyp("max_length"))
             
-            self.train_dataset, self.val_dataset, self.train_size, self.val_size = self.SplitDataset(data, self.GetHyp("Train to Val Ratio"), max_length)
+            self.train_dataset, self.val_dataset, self.train_size, self.val_size = self.SplitDataset(data, self.GetHyp("train_val_ratio"), max_length)
             vocab_size = len(self.train_dataset.vocab) + 1
 
             self.CreateTrainDataLoader()
@@ -200,8 +198,8 @@ class Model(ModelTemplate):
 
             self.scaler = GradScaler()
             self.criterion = nn.CrossEntropyLoss()
-            self.optimizer = optim.Adam(self.model.parameters(), lr=self.GetHyp("Learning Rate"))
-            self.scheduler = lr_scheduler.OneCycleLR(self.optimizer, max_lr=self.GetHyp("Max Learning Rate"), steps_per_epoch=len(self.train_dataloader), epochs=self.GetHyp("Epochs"))
+            self.optimizer = optim.Adam(self.model.parameters(), lr=self.GetHyp("learning_rate"))
+            self.scheduler = lr_scheduler.OneCycleLR(self.optimizer, max_lr=self.GetHyp("max_learning_rate"), steps_per_epoch=len(self.train_dataloader), epochs=self.GetHyp("epochs"))
         
             total_params, trainable_params, non_trainable_params, model_size_mb = self.GetModelSize(self.model)
 
@@ -230,9 +228,9 @@ class Model(ModelTemplate):
     def Train(self):
         """This function trains the model. (Called by the training controller every epoch)"""
         try:
-            if self.GetHyp("Shuffle Each Epoch"):
-                self.CreateTrainDataLoader() if self.GetHyp("Shuffle Train") else None
-                self.CreateValDataLoader() if self.GetHyp("Shuffle Val") else None
+            if self.GetHyp("shuffle_each_epoch"):
+                self.CreateTrainDataLoader() if self.GetHyp("shuffle_train") else None
+                self.CreateValDataLoader() if self.GetHyp("shuffle_val") else None
 
             # Training phase
             self.model.train()
@@ -325,7 +323,7 @@ class Model(ModelTemplate):
 
             if not os.path.exists(self.GetHyp("model_path")):
                 os.makedirs(self.GetHyp("model_path"))
-            torch.jit.save(torch.jit.script(model), os.path.join(self.GetHyp("Model Path"), model_name), _extra_files=metadata)
+            torch.jit.save(torch.jit.script(model), os.path.join(self.GetHyp("model_path"), model_name), _extra_files=metadata)
             print(f"Saved {model_name} successfully.")
         except Exception as e:
             self.error = str(e)

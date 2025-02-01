@@ -55,7 +55,7 @@ class ModelTypeLoader:
             time.sleep(5) # Lock to 0.2FPS
     
     def LoadModelType(self, file: str):
-        model_import = importlib.import_module(f"modelTypes.{file[:-3]}")
+        model_import = importlib.import_module(f"model_types.{file[:-3]}")
         model_name = file[:-3] if "name" not in model_import.__dict__ else model_import.name
 
         # Check for required variables
@@ -101,7 +101,7 @@ class ModelTypeLoader:
 
         return model
 
-    def GetModelTypes(self):
+    def Getmodel_types(self):
         return self.model_types
 
 class Colors:
