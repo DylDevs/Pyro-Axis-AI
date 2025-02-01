@@ -1,3 +1,4 @@
+import multiprocessing
 import screeninfo
 import requests
 import webview
@@ -5,7 +6,7 @@ import json
 import time
 import os
 
-CACHE = os.path.join(os.path.dirname(__file__), "cache")
+CACHE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 DEBUG_MODE = False
 WIDTH = 1300
 HEIGHT = 820
@@ -97,6 +98,10 @@ def start_webpage(frontend_started):
         debug=DEBUG_MODE, # Show developer tools
         storage_path=CACHE
     )
+
+def run(frontend_started):
+    p = multiprocessing.Process(target=start_webpage, args=(frontend_started,), daemon=True)
+    p.start()
 
 html = """
 <html>

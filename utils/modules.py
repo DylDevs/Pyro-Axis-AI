@@ -8,6 +8,8 @@ import time
 import sys
 import os
 
+MODEL_TYPES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model_types")
+
 class LoadExceptions:
     class MissingVar(Exception): pass
     class HypNotList(Exception): pass
@@ -18,7 +20,7 @@ class ModelTypeLoader:
     def __init__(self, model_files):
         self.model_files = model_files
         self.model_types : list[Model] = []
-        self.file_mod_times = {file: os.path.getmtime(os.path.join(os.path.dirname(__file__), file)) for file in model_files}
+        self.file_mod_times = {file: os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file)) for file in model_files}
         self.InitialLoad()
         threading.Thread(target=self._listener_thread, daemon=True).start()
 
@@ -43,7 +45,7 @@ class ModelTypeLoader:
         while True:
             edited = False
             for i, file in enumerate(self.model_files):
-                current_mod_time = os.path.getmtime(os.path.join(os.path.dirname(__file__), file))
+                current_mod_time = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file))
                 if current_mod_time != self.file_mod_times[file]:
                     model_name = self.model_types[i].name
                     edited = True

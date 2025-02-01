@@ -52,14 +52,11 @@ def run():
         print(f"Backend URL: {backend_url} (localhost:8000)", color=modules.Colors.GREEN)
 
     print("Awaiting client connection...", color=modules.Colors.BLUE, reprint=True)
-
-    try:
-        window.start_webpage(frontend_started=start_frontend)
-    except Exception as e:
-        traceback.print_exc()
+    
+    window.run(start_frontend)
 
     client_ip = webserver.WaitForClient()
-    print(f"Client connected at {client_ip}!", color=modules.Colors.GREEN, reprint=True)
+    print(f"Client connected at {client_ip}!\n", color=modules.Colors.GREEN, reprint=True)
 
 if __name__ == '__main__':
     run()

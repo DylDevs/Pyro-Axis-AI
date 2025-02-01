@@ -5,11 +5,15 @@ import subprocess # Used for running commands in the terminal
 import threading # Used for running functions asynchronously
 import uvicorn # Used for running FastAPI
 import socket # Used for getting local IP
+import time # Used for timing
 import json # Used for parsing JSON
 import os # Used for file management
 
 import utils.modules as modules # Modules and utilities for training models
 from utils.modules import print # Edited print function with color and reprint
+import utils.docs as docs # Start in-app docs
+
+CACHE_JSON = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache", "cache.json")
 
 training_controllers : list[modules.TrainingController] = []
 model_loader : modules.ModelTypeLoader = None
@@ -29,13 +33,12 @@ def GetWebData():
     frontend_url = f"http://{IP}:3000"
     webserver_url = f"http://{IP}:8000"
 
-    with open(os.path.join(os.path.dirname(__file__), "cache", "cache.json"), "r") as f:
+    with open(CACHE_JSON, "r") as f:
         cache_content = json.load(f)
         cache_content["webserver_url"] = webserver_url
-        print(cache_content)
         f.close()
 
-    with open(os.path.join(os.path.dirname(__file__), "cache", "cache.json"), "w") as f:
+    with open(CACHE_JSON, "w") as f:
         json.dump(cache_content, f)
         f.close()
 
@@ -115,6 +118,20 @@ def status():
     print(f"Status Data: {data}")
     
     return {"status": "ok", "data": data}
+
+@app.get("/docs/start")
+def start_docs():
+    docs.run()
+    while not docs.DOCS_HAVE_STARTED:
+        if not docs.DOCS_AVAILABLE:
+            return {"status": "error", "error": "Docs are not available."}
+        time.sleep(0.1)
+    return {"status": "ok"}
+
+@app.get("/docs/stop")
+def stop_docs():
+    docs.stop()
+    return {"status": "ok"}
 
 def start_backend(debug):
     if debug:
