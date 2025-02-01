@@ -5,6 +5,8 @@ import subprocess # Used for running commands in the terminal
 import threading # Used for running functions asynchronously
 import uvicorn # Used for running FastAPI
 import socket # Used for getting local IP
+import json # Used for parsing JSON
+import os # Used for file management
 
 import modelTypes.modules as modules # Modules and utilities for training models
 from modelTypes.modules import print # Edited print function with color and reprint
@@ -26,6 +28,17 @@ def GetWebData():
 
     frontend_url = f"http://{IP}:3000"
     webserver_url = f"http://{IP}:8000"
+
+    with open(os.path.join(os.path.dirname(__file__), "cache", "cache.json"), "r") as f:
+        cache_content = json.load(f)
+        cache_content["webserver_url"] = webserver_url
+        print(cache_content)
+        f.close()
+
+    with open(os.path.join(os.path.dirname(__file__), "cache", "cache.json"), "w") as f:
+        json.dump(cache_content, f)
+        f.close()
+
     return IP, frontend_url, webserver_url
 
 app = FastAPI(title="Pyro Axis AI Training", 
@@ -51,8 +64,8 @@ async def root(request: Request):
     IP, _, webserver_url = GetWebData()
     return {"status": "ok", "url": webserver_url, "ip": IP}
 
-@app.get("/get_models")
-async def get_models():
+@app.get("/models")
+async def models():
     global model_loader
     model_types = model_loader.GetModelTypes()
     model_types_dict = []

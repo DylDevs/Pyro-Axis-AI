@@ -1,74 +1,61 @@
-export async function AttemptServerConnection(webserver_url: string) {
-  let newUrl = "";
-  let connected = true;
-  let ip = "";
-  let error = null;
+// @ts-ignore | Prevents module not found error from js-cookie, even though it is installed
+import Cookies from 'js-cookie';
 
-  try {;
-    let reponse = await fetch(webserver_url);
-    if (!reponse.ok) {
-      throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + reponse.status + ")");
-    }
-    let data = await reponse.json();
-    if (data.status !== "ok") {
-      throw new Error("Failed to get data from server: " + data.traceback);
-    }
-
-    connected = true;
-    newUrl = data.url;
-    ip = data.ip;
-
-  } catch (error : any) {
-    connected = false;
-    newUrl = webserver_url;
-    ip = "localhost";
-    error = error.message;
-  }
-
-  return { connected, newUrl, ip, error };
-}
-
-export async function GetModelsFromServer(webserver_url: string) {
-  let reponse = await fetch(webserver_url + "/get_models");
-  if (!reponse.ok) {
-    throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + reponse.status + ")");
-  }
-  let data = await reponse.json();
-  if (data.status !== "ok") {
-    throw new Error("Failed to get data from server: " + data.traceback);
-  }
-  return data.models;
-}
-
-export async function SendTrainingRequest(webserver_url: string, hyperparameters : any, model_index : number) {
-  let reponse = await fetch(webserver_url + "/train", {
-    method: "POST",
+async function FetchServer(extension: string, body: any = {}, method : string = "GET", error : boolean = true) {
+  const webserver_url = Cookies.get("webserver_url")
+  let response = await fetch(webserver_url + extension, {
+    method: method,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      "model_index": model_index,
-      "hyperparameters": hyperparameters
-    }),
+    ...(method !== "GET" && method !== "HEAD" ? { body: JSON.stringify(body) } : {}),
   });
-  if (!reponse.ok) {
-    throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + reponse.status + ")");
+
+  if (!response.ok && error) {
+    throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + response.status + ")");
+  } else if (!response.ok && !error) {
+    return false;
   }
-  let data = await reponse.json();
-  if (data.status !== "ok") {
+
+  let data = await response.json();
+
+  if (data.status !== "ok" && error) {
     throw new Error("Failed to get data from server: " + data.traceback);
+  } else if (data.status !== "ok" && !error) {
+    return false;
   }
+
   return data;
 }
 
-export async function GetModelStatuses(webserver_url: string) {
-  let reponse = await fetch(webserver_url + "/status");
-  if (!reponse.ok) {
-    throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + reponse.status + ")");
+export async function AttemptServerConnection(test_webserver_url : string) {
+  Cookies.set("webserver_url", test_webserver_url);
+  let connected = true;
+
+  let data = await FetchServer("", {}, "GET", false);
+  if (data) {
+    console.log(data)
+    connected = true;
+    Cookies.set("webserver_url", test_webserver_url);
+  } else {
+    Cookies.set("webserver_url", "https://localhost:8000");
+    connected = false;
   }
-  let data = await reponse.json();
-  if (data.status !== "ok") {
-    throw new Error("Failed to get data from server: " + data.traceback);
-  }
+
+  return connected;
+}
+
+export async function GetModelsFromServer() {
+  let data = await FetchServer("/models");
+  return data.models;
+}
+
+export async function SendTrainingRequest(hyperparameters : any, model_index : number) {
+  let data = await FetchServer("/train", { "model_index": model_index, "hyperparameters": hyperparameters }, "POST");
+  return data;
+}
+
+export async function GetModelStatuses() {
+  let data = await FetchServer("/status");
   return data.data;
 }

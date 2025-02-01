@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
-import { Plus, ArrowDownToLine, X, Power, Image, Text, Flame  } from "lucide-react";
+import { Plus, ArrowDownToLine, X, Image, Text, Flame  } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -132,7 +132,7 @@ function formatDuration(seconds: number): string {
   if (days > 0) parts.push(`${days} days`);
   if (hours > 0) parts.push(`${hours} hours`);
   if (minutes > 0) parts.push(`${minutes} minutes`);
-  if (seconds > 0 || parts.length === 0) parts.push(`${seconds.toFixed(2)} seconds`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds.toFixed(1)} seconds`);
 
   return parts.join(", ");
 }
@@ -238,7 +238,7 @@ export default function Index() {
   useEffect(() => {
     const interval = setInterval(() => {
       async function UpdateModels() {
-        const data = await GetModelStatuses(Cookies.get("webserver_url") ?? "http://localhost:8000");
+        const data = await GetModelStatuses();
         const updated_data : Model[] = []
 
         if (Array.isArray(data) && data.forEach) {
@@ -268,8 +268,7 @@ export default function Index() {
     try {
       toast.loading("Retrieving models...");
 
-      const webserver_url = Cookies.get("webserver_url") ?? "http://localhost:8000";
-      const model_data = await GetModelsFromServer(webserver_url);
+      const model_data = await GetModelsFromServer();
       HypToDict(model_data[0].hyperparameters);
 
       toast.dismiss();
@@ -327,7 +326,7 @@ export default function Index() {
     function HandleHypSelection() {
       if (!modelsData) return;
       setHypSelectorOpen(false);
-      SendTrainingRequest(Cookies.get("webserver_url") ?? "http://localhost:8000", HypToDict(modelsData[model_hyp_index_int].hyperparameters), model_hyp_index_int);
+      SendTrainingRequest(HypToDict(modelsData[model_hyp_index_int].hyperparameters), model_hyp_index_int);
       setCreatingModel(false);
     }
 

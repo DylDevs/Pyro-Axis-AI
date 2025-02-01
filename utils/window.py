@@ -1,10 +1,6 @@
-from multiprocessing import JoinableQueue
-import multiprocessing
 import screeninfo
 import requests
-import logging
 import webview
-import ctypes
 import json
 import time
 import os

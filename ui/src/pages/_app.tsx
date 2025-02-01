@@ -1,11 +1,13 @@
 import type { AppProps } from 'next/app';
 import { ThemeProvider } from '@/components/theme_provider';
 import { Loading } from '@/components/loading';
-import { useEffect, useState, useCallback } from 'react'; 
+import { useEffect, useState } from 'react'; 
 import { toast, Toaster } from 'sonner';
 import { Metadata } from 'next';
 import { AttemptServerConnection } from '@/components/webserver';
 import '@/styles/globals.css';
+import fs from "fs";
+import path from "path";
 
 // @ts-ignore | Prevents module not found error from js-cookie, even though it is installed
 import Cookies from 'js-cookie';
@@ -16,38 +18,17 @@ export const metadata: Metadata = {
     icons: ["favicon.ico"],
 };
 
-function MyApp({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
   const [showLoading, setShowLoading] = useState(true);
-
-  // Initialize the cookie with a default value if it does not exist
-  if (Cookies.get("connected") === undefined) {
-    Cookies.set("connected", "false");
-  }
-
-  let ip = Cookies.get("ip") ?? "localhost";
-  if (ip !== "localhost") {
-    console.log("IP extracted from cookie: " + ip);
-  } else {
-    console.log("Using default IP: " + ip);
-  }
-  let frontend_url = `http://${ip}:3000`;
-  let webserver_url = `http://${ip}:8000`;
 
   const setupConnection = async () => {
     try {
-      let { connected, newUrl, error, ip } = await AttemptServerConnection(webserver_url);
-      if (connected) {
-        webserver_url = newUrl;
-        frontend_url = `http://${ip}:3000`;
-        Cookies.set("ip", ip);
-        Cookies.set("connected", "true");
-      } else {
-        Cookies.set("ip", "localhost");
-        Cookies.set("connected", "false");
-      }
-
-      Cookies.set("webserver_url", webserver_url);
-      Cookies.set("frontend_url", frontend_url);
+      const reponse = await fetch("/api/data")
+      const json = await reponse.json()
+      const webserver_url = json["webserver_url"]
+      const connected = await AttemptServerConnection(webserver_url);
+    
+      Cookies.set("connected", connected ? "true" : "false");
 
       if (!connected) {
         throw new Error("Failed to connect to server");
@@ -66,7 +47,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             setShowLoading(false);
             resolve();
           }, 2500);
-          console.log("Connected to training server at " + webserver_url);
+          console.log("Connected to training server at " + Cookies.get("webserver_url"));
         } catch (error) {
           reject(error);
           console.log(error);
@@ -93,5 +74,3 @@ function MyApp({ Component, pageProps }: AppProps) {
     </ThemeProvider>
   );
 }
-
-export default MyApp;
