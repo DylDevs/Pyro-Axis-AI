@@ -1,0 +1,40 @@
+{
+    "$schema": "../utils/schema.json",
+    "name": "string",
+    "description": "string",
+    "definitions_py": "z.py",
+    "data_type": "text",
+    "hyperparameters": [
+        {
+            "name": "string",
+            "default": true,
+            "description": "xdd"
+        }
+    ],
+    "intialize_function": "string",
+    "train_function": "string",
+    "save_function": "string",
+    "progress_bars": [
+        {
+            "title": "string",
+            "description": "string",
+            "type": "number",
+            "current": "string",
+            "total": "string",
+            "progress_text": ""
+        }
+    ],
+    "info_dropdowns": [
+        {
+            "title": "string",
+            "description": "string",
+            "data": [
+                {
+                    "title": "string",
+                    "value": "string",
+                    "description": null
+                }
+            ]
+        }
+    ]
+}

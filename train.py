@@ -1,6 +1,6 @@
 def run():
-    from model_types.modules import print # Edited print function with color and reprint
-    from model_types import modules # Modules and utilities for training models
+    from utils.modules import print # Edited print function with color and reprint
+    from utils import modules # Modules and utilities for training models
     import utils.webserver as webserver # Local webserver
     import utils.window as window # Creates a window for the frontend
 

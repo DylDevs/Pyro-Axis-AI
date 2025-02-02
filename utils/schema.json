@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "definitions_py": { "type": "string", "pattern": ".+\\.py$" },
+        "data_type": { "type": "string", "enum": ["text", "image", "audio", "other"] },
+        "hyperparameters": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "default": { "type": ["string", "integer", "number", "boolean"] },
+                    "min_value": { "type": ["integer", "number"] },
+                    "max_value": { "type": ["integer", "number"] },
+                    "incriment": { "type": ["integer", "number"] },
+                    "special_type": { "type": "string", "enum": ["path", "dropdown"] },
+                    "options": { "type": "array","items": { "type": ["string", "integer", "number", "boolean"] } },
+                    "description": { "type": "string" }
+                },
+                "required": ["name", "default"]
+            }
+        },
+        "intialize_function": { "type": "string" },
+        "train_function": { "type": "string" },
+        "save_function": { "type": "string" },
+        "progress_bars": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "description": { "type": "string" },
+                    "type": { "type": "string", "enum": ["number", "time"] },
+                    "current": { "type": "string" },
+                    "total": { "type": "string" },
+                    "progress_text": { "type": "string" }
+                },
+                "required": ["title", "type", "current", "total", "progress_text"]
+            }
+        },
+        "info_dropdowns": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "description": { "type": "string" },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "title": { "type": "string" },
+                                "value": { "type": "string" },
+                                "description": { "type": ["string", "null"] }
+                            },
+                            "required": ["title", "value"]
+                        }
+                    }
+                },
+                "required": ["title", "data"]
+            }
+        }
+    },
+    "required": ["name", "description", "definitions_py", "data_type", "intialize_function", "train_function", "save_function"]
+}

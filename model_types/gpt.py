@@ -14,7 +14,7 @@ import os
 import re
 
 # Resources to create models for the Pyro Axis AI Training Hub
-from model_types.modules import *
+from utils.modules import *
 
 name = "Generative Pretrained Transformer"
 description = "Generates a response based on input text (ChatGPT)"

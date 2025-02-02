@@ -1,5 +1,6 @@
 input: .
-output: .retype
+output: ./output
+url: http://localhost:5000
 branding:
   title: Pyro Axis AI
   label: Docs

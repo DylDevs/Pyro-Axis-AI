@@ -13,7 +13,7 @@ import time
 import os
 
 # Resources to create models for the Pyro Axis AI Training Hub
-from model_types.modules import *
+from utils.modules import *
 
 name = "Language Classification 2"
 description = "Generates a number based on input text (copy model for testing)"
