@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { StartDocs, StopDocs } from "@/components/webserver";
 import { Loading } from "@/components/loading";
+import { motion } from "framer-motion";
  
 const Sidebar = () => {
     const { push } = useRouter();
@@ -35,46 +36,38 @@ export default function Docs() {
 
     useEffect(() => {
         const runDocs = async () => {
-          const status = await StartDocs(); // Wait for the function to complete
-          set_loaded_state(status); // Set the variable to true when function completes
+            const status = await StartDocs();
+            set_loaded_state(status);
         };
-    
+
         runDocs();
     }, []);
 
-    if (loaded_state === null) {
-        // Show loading screen when loaded_state is null
-        return (
-            <div className="flex flex-row">
-                <Sidebar />
-                <Card className="flex flex-col gap-2 items-center justify-center ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black">
-                    <Loading loading_text="Building documentation..." fullscreen={false} />
-                </Card>
-            </div>
-        );
-    }
-
-    if (loaded_state === false) {
-        // Show error screen when loaded_state is false
-        return (
-            <div className="flex flex-row">
-                <Sidebar />
-                <Card className="flex flex-col gap-2 items-center justify-center ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black">
-                    <TriangleAlert className="h-14 w-14"/>
-                    <p className="text-muted-foreground text-lg">Error loading documentation, check the console for more info</p>
-                </Card>
-            </div>
-        );
-    }
-
-    // Show the embed when loaded_state is true
     return (
         <div className="flex flex-row">
             <Sidebar />
-            <Card className="flex flex-col gap-2 items-center justify-center ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black">
-                 <embed src="http://localhost:5000" className="w-full h-full bg-black" />
-            </Card>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col gap-2 items-center justify-center ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black"
+            >
+                {loaded_state === null && (
+                    <Loading loading_text="Building documentation..." fullscreen={false} />
+                )}
+                {loaded_state === false && (
+                    <>
+                        <TriangleAlert className="h-14 w-14" />
+                        <p className="text-muted-foreground text-lg">
+                            Error loading documentation, check the console for more info
+                        </p>
+                    </>
+                )}
+                {loaded_state === true && (
+                    <embed src="http://localhost:5000" className="w-full h-full bg-black" />
+                )}
+            </motion.div>
         </div>
     );
 }
-

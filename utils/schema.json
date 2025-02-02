@@ -4,7 +4,7 @@
     "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
-        "definitions_py": { "type": "string", "pattern": ".+\\.py$" },
+        "functions_py": { "type": "string", "pattern": ".+\\.py$" },
         "data_type": { "type": "string", "enum": ["text", "image", "audio", "other"] },
         "hyperparameters": {
             "type": "array",
@@ -65,5 +65,5 @@
             }
         }
     },
-    "required": ["name", "description", "definitions_py", "data_type", "intialize_function", "train_function", "save_function"]
+    "required": ["name", "description", "functions_py", "data_type", "intialize_function", "train_function", "save_function"]
 }

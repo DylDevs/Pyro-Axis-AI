@@ -2,7 +2,7 @@
     "$schema": "../utils/schema.json",
     "name": "string",
     "description": "string",
-    "definitions_py": "z.py",
+    "functions_py": "z.py",
     "data_type": "text",
     "hyperparameters": [
         {
