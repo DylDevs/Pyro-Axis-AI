@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: http://localhost:5000/sitemap.xml.gz
