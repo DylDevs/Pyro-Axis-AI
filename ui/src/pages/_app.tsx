@@ -66,7 +66,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <ThemeProvider defaultTheme="dark" attribute="class">
       <Toaster position="bottom-right" theme="dark" richColors={true} closeButton={true} duration={5000} />
       <div className="flex flex-row gap-3 m-3">
-        {showLoading && <Loading loading_text="Connecting to server..." />}
+        {showLoading && <Loading loading_text="Connecting to server..." fullscreen />}
         <div style={{ display: showLoading ? "none" : "block" }} className='overflow-hidden'>
           <Component {...pageProps} />
         </div>

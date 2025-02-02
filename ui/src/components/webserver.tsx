@@ -3,29 +3,39 @@ import Cookies from 'js-cookie';
 
 async function FetchServer(extension: string, body: any = {}, method : string = "GET", error : boolean = true) {
   const webserver_url = Cookies.get("webserver_url")
-  let response = await fetch(webserver_url + extension, {
-    method: method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...(method !== "GET" && method !== "HEAD" ? { body: JSON.stringify(body) } : {}),
-  });
+  try {
+    let response = await fetch(webserver_url + extension, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      ...(method !== "GET" && method !== "HEAD" ? { body: JSON.stringify(body) } : {}),
+    });
+  
+    if (!response.ok && error) {
+      throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + response.status + ")");
+    } else if (!response.ok && !error) {
+      return false;
+    }
 
-  if (!response.ok && error) {
-    throw new Error("Response was not ok to URL: " + webserver_url + " (Response Status: " + response.status + ")");
-  } else if (!response.ok && !error) {
-    return false;
+    let data = await response.json();
+
+    if (data.status !== "ok" && error) {
+      throw new Error("Failed to get data from server: " + data.traceback);
+    } else if (data.status !== "ok" && !error) {
+      return false;
+    }
+
+    return data;
+  } catch (e) {
+    if (error) {
+      if (e instanceof Error) {
+        throw new Error("Failed to get data from server: " + e.message);
+      } else {
+        throw new Error("Failed to get data from server: " + e);
+      }
+    }
   }
-
-  let data = await response.json();
-
-  if (data.status !== "ok" && error) {
-    throw new Error("Failed to get data from server: " + data.traceback);
-  } else if (data.status !== "ok" && !error) {
-    return false;
-  }
-
-  return data;
 }
 
 export async function AttemptServerConnection(test_webserver_url : string) {
@@ -58,4 +68,14 @@ export async function SendTrainingRequest(hyperparameters : any, model_index : n
 export async function GetModelStatuses() {
   let data = await FetchServer("/status");
   return data.data;
+}
+
+export async function StartDocs() {
+  let data = await FetchServer("/docs/start", {}, "GET", false);
+  return data.status === "ok";
+}
+
+export async function StopDocs() {
+  let data = await FetchServer("/docs/stop");
+  return data;
 }

@@ -1,6 +1,7 @@
 // Utilities
 import { GetModelsFromServer, SendTrainingRequest, GetModelStatuses } from "@/components/webserver";
 import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 // UI
@@ -9,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
-import { Plus, ArrowDownToLine, X, Image, Text, Flame  } from "lucide-react";
+import { Plus, ArrowDownToLine, X, Image, Text, Flame, ScrollText  } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -142,6 +143,7 @@ function ConvertToProgressValue(value: number, max: number): number {
 }
 
 export default function Index() {
+  const { push } = useRouter();
   const [greeting, setGreeting] = useState(getGreeting());
   const [showLoading, setShowLoading] = useState(false);
 
@@ -481,6 +483,7 @@ export default function Index() {
             <Button variant="outline" className="w-full bg-zinc-900 hover:bg-zinc-800" onClick={() => setCreatingModel(true)}><Plus />Train Model</Button>
             <Button variant="outline" className="w-full bg-zinc-900 hover:bg-zinc-800"><X />Stop Training</Button>
             <Button variant="outline" className="w-full bg-zinc-900 hover:bg-zinc-800"><ArrowDownToLine />Stop Training and Save</Button>
+            <Button variant="outline" className="w-full bg-zinc-900 hover:bg-zinc-800" onClick={() => push("/docs")}><ScrollText />Documentation</Button>
           </div>
         </div>
       </Card>

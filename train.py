@@ -4,13 +4,13 @@ def run():
     import utils.webserver as webserver # Local webserver
     import utils.window as window # Creates a window for the frontend
 
+    start_window = False
     start_frontend = True
     start_webserver = True
     debug = False
 
     print("Importing libraries...", color=modules.Colors.BLUE, reprint=True)
 
-    import traceback # Used for debugging
     import shutil # Used for deleting __pycache__ tree
     import torch # Used for training and CUDA detection
     import os # Used for file management
@@ -53,7 +53,7 @@ def run():
 
     print("Awaiting client connection...", color=modules.Colors.BLUE, reprint=True)
     
-    window.run(start_frontend)
+    window.run(start_frontend) if start_window else None
 
     client_ip = webserver.WaitForClient()
     print(f"Client connected at {client_ip}!\n", color=modules.Colors.GREEN, reprint=True)

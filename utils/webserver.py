@@ -121,12 +121,9 @@ def status():
 
 @app.get("/docs/start")
 def start_docs():
-    docs.run()
-    while not docs.DOCS_HAVE_STARTED:
-        if not docs.DOCS_AVAILABLE:
-            return {"status": "error", "error": "Docs are not available."}
-        time.sleep(0.1)
-    return {"status": "ok"}
+    status = docs.run()
+    if not status: return {"status": "error"}
+    else: return {"status": "ok"}
 
 @app.get("/docs/stop")
 def stop_docs():

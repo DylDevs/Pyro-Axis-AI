@@ -11,3 +11,7 @@ ui/node_modules
 # Demo Images
 neural_network.png
 tensorboard_scalars.png
+
+# Retype Build
+/docs/output
+/docs/retype.manifest
