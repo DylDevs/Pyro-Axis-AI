@@ -1,39 +1,296 @@
 {
     "$schema": "../utils/schema.json",
-    "name": "string",
-    "description": "string",
+    "name": "Generative Pretrained Transformer",
+    "description": "Generates human like text based on a prompt",
     "update_rate": 5,
-    "functions_py": "z.py",
+    "functions_py": "gpt.py",
     "data_type": "text",
     "hyperparameters": [
         {
-            "name": "string",
+            "name": "Data JSON",
+            "default": "../data/gpt/train.json",
+            "special_type": "path",
+            "description": "Path to the training data in JSON format"
+        },
+        {
+            "name": "Model Save Path",
+            "default": "../models/gpt/model.pt",
+            "special_type": "path",
+            "description": "Path to save the model to"
+        },
+        {
+            "name": "Device",
+            "default": "Auto",
+            "special_type": "dropdown",
+            "options": ["Auto", "GPU", "CPU"],
+            "description": "Device to train on"
+        },
+        {
+            "name": "Batch Size",
+            "default": 36,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of samples per batch"
+        },
+        {
+            "name": "Learning Rate",
+            "default": 0.01,
+            "min_value": 0.00001,
+            "max_value": 1,
+            "incriment": 0.00001,
+            "description": "Learning Rate"
+        },
+        {
+            "name": "Max Learning Rate",
+            "default": 0.01,
+            "min_value": 0.00001,
+            "max_value": 1,
+            "incriment": 0.00001,
+            "description": "Maximum Learning Rate"
+        },
+        {
+            "name": "Train Val Ratio",
+            "default": 0.8,
+            "min_value": 0.01,
+            "max_value": 0.99,
+            "incriment": 0.01,
+            "description": "Ratio of training data to validation data"
+        },
+        {
+            "name": "Num Workers",
+            "default": 0,
+            "min_value": 0,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of workers to use for data loading"
+        },
+        {
+            "name": "Dropout",
+            "default": 0.3,
+            "min_value": 0,
+            "max_value": 1,
+            "incriment": 0.01,
+            "description": "Probability that a neuron will skip a forward pass"
+        },
+        {
+            "name": "Weight Decay",
+            "default": 0.1,
+            "min_value": 0,
+            "max_value": 1,
+            "incriment": 0.01,
+            "description": "Weight decay for the optimizer"
+        },
+        {
+            "name": "Patience",
+            "default": 10,
+            "min_value": 0,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of epochs to wait before early stopping (zero for no early stopping)"
+        }, 
+        {
+            "name": "Shuffle Train",
             "default": true,
-            "description": "xdd"
+            "description": "Whether to shuffle the training data"
+        },
+        {
+            "name": "Shuffle Val",
+            "default": true,
+            "description": "Whether to shuffle the validation data"
+        },
+        {
+            "name": "Shuffle Each Epoch",
+            "default": true,
+            "description": "Whether to shuffle the selected type of data each epoch"
+        },
+        {
+            "name": "Pin Memory",
+            "default": false,
+            "description": "Whether to use pin memory for the dataloaders"
+        },
+        {
+            "name": "Drop Last",
+            "default": false,
+            "description": "Whether to drop the last batch of data if it is smaller than the batch size"
+        },
+        {
+            "name": "Embedding Dim",
+            "default": 64,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Embedding dimension for the model"
+        },
+        {
+            "name": "Hidden Dim",
+            "default": 128,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Hidden dimension for the model"
+        },
+        {
+            "name": "Num Heads",
+            "default": 2,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of heads for the model"
+        },
+        {
+            "name": "Num Layers",
+            "default": 4,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of layers for the model"
+        },
+        {
+            "name": "Max Gradient Norm",
+            "default": 0.25,
+            "min_value": 0,
+            "max_value": null,
+            "incriment": 0.01,
+            "description": "Maximum gradient norm for the optimizer"
+        },
+        {
+            "name": "Scheduler Factor",
+            "default": 0.4,
+            "min_value": 0,
+            "max_value": null,
+            "incriment": 0.01,
+            "description": "Factor for the scheduler"
+        },
+        {
+            "name": "Scheduler Patience",
+            "default": 5,
+            "min_value": 0,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Patience for the scheduler"
+        },
+        {
+            "name": "Warmup Percentage",
+            "default": 0.3,
+            "min_value": 0,
+            "max_value": 1,
+            "incriment": 0.01,
+            "description": "Percentage of epochs to warm up the scheduler"
+        },
+        {
+            "name": "Combined Loss Ratio",
+            "default": 0.8,
+            "min_value": 0,
+            "max_value": 1,
+            "incriment": 0.01,
+            "description": "Ratio of validation loss to training loss for early stopping"
         }
     ],
-    "intialize_function": "string",
-    "train_function": "string",
-    "save_function": "string",
+    "intialize_function": "Initialize",
+    "train_function": "Train",
+    "save_function": "Save",
     "progress_bars": [
         {
-            "name": "string",
-            "description": "string",
+            "name": "controller.epoch",
+            "description": "",
             "type": "number",
-            "current": "string",
-            "total": "string",
+            "current": "",
+            "total": "",
             "progress_text": ""
+        },
+        {
+            "name": "controller.time",
+            "description": "",
+            "type": "time",
+            "current": "",
+            "total": "",
+            "progress_text": ""
+        },
+        {
+            "name": "Patience",
+            "description": "Shows how many epochs the model has gone since the best epoch and how close it is to the patience value",
+            "type": "number",
+            "current": "epochs_until_patience",
+            "total": "hyperparameter.Patience",
+            "progress_text": "{0} epochs out of {1} until early stop"
         }
     ],
     "info_dropdowns": [
         {
-            "title": "string",
-            "description": "string",
+            "title": "Additional Training Data",
+            "description": "Information about data split, augmentation, etc.",
             "data": [
                 {
-                    "title": "string",
-                    "value": "string",
-                    "description": null
+                    "title": "Train Size",
+                    "value": "train_size",
+                    "description": "Number of training datapoints"
+                },
+                {
+                    "title": "Val Size",
+                    "value": "val_size",
+                    "description": "Number of validation datapoints"
+                },
+                {
+                    "title": "Max Length",
+                    "value": "max_length",
+                    "description": "Maximum sequence length in the dataset"
+                },
+                {
+                    "title": "Vocab Size",
+                    "value": "vocab_size",
+                    "description": "Number of unique tokens in the dataset"
+                }
+            ]
+        },
+        {
+            "title": "Model Data",
+            "description": "Information about the model architecture and training utilities",
+            "data": [
+                {
+                    "title": "Total Parameters",
+                    "value": "total_parameters",
+                    "description": "Total number of parameters in the model"
+                },
+                {
+                    "title": "Trainable Parameters",
+                    "value": "trainable_parameters",
+                    "description": "Number of trainable parameters in the model"
+                },
+                {
+                    "title": "Non-Trainable Parameters",
+                    "value": "non_trainable_parameters",
+                    "description": "Number of non-trainable parameters in the model"
+                },
+                {
+                    "title": "Model Size",
+                    "value": "model_size",
+                    "description": "Size of the model in MB"
+                },
+                {
+                    "title": "Optimizer",
+                    "value": "optimizer_str",
+                    "description": "Optimizer used for training"
+                },
+                {
+                    "title": "Criterion",
+                    "value": "criterion_str",
+                    "description": "Criterion used for training"
+                },
+                {
+                    "title": "Scaler",
+                    "value": "scaler_str",
+                    "description": "Scaler used for training"
+                },
+                {
+                    "title": "Warmup Scheduler",
+                    "value": "warmup_scheduler_str",
+                    "description": "Warmup scheduler used for training"
+                },
+                {
+                    "title": "Scheduler",
+                    "value": "scheduler_str",
+                    "description": "Scheduler used for training"
                 }
             ]
         }

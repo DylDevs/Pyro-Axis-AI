@@ -384,7 +384,7 @@ Variable which defines the max value. There are 2 ways these values can be selec
 {
     "progress_bars" : [
         {
-            "total": "hyperparameter.patience"
+            "total": "hyperparameter.Patience"
         }
     ]
 }

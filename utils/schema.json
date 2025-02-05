@@ -13,12 +13,12 @@
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "default": { "type": ["string", "integer", "number", "boolean"] },
-                    "min_value": { "type": ["integer", "number"] },
-                    "max_value": { "type": ["integer", "number"] },
-                    "incriment": { "type": ["integer", "number"] },
+                    "default": { "type": ["string", "number", "boolean"] },
+                    "min_value": { "type": ["number", "null"] },
+                    "max_value": { "type": ["number", "null"] },
+                    "incriment": { "type": "number" },
                     "special_type": { "type": "string", "enum": ["path", "dropdown"] },
-                    "options": { "type": "array","items": { "type": ["string", "integer", "number", "boolean"] } },
+                    "options": { "type": "array","items": { "type": ["string", "number", "boolean"] } },
                     "description": { "type": "string" }
                 },
                 "required": ["name", "default"]
