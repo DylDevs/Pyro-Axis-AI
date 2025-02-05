@@ -2,6 +2,7 @@
     "$schema": "../utils/schema.json",
     "name": "string",
     "description": "string",
+    "update_rate": 5,
     "functions_py": "z.py",
     "data_type": "text",
     "hyperparameters": [
@@ -16,7 +17,7 @@
     "save_function": "string",
     "progress_bars": [
         {
-            "title": "string",
+            "name": "string",
             "description": "string",
             "type": "number",
             "current": "string",

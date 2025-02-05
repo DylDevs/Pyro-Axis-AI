@@ -4,6 +4,7 @@
     "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
+        "update_rate": { "type": "number" },
         "functions_py": { "type": "string", "pattern": ".+\\.py$" },
         "data_type": { "type": "string", "enum": ["text", "image", "audio", "other"] },
         "hyperparameters": {
@@ -31,14 +32,14 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "title": { "type": "string" },
+                    "name": { "type": "string" },
                     "description": { "type": "string" },
                     "type": { "type": "string", "enum": ["number", "time"] },
                     "current": { "type": "string" },
                     "total": { "type": "string" },
                     "progress_text": { "type": "string" }
                 },
-                "required": ["title", "type", "current", "total", "progress_text"]
+                "required": ["name", "type", "current", "total", "progress_text"]
             }
         },
         "info_dropdowns": {
@@ -65,5 +66,5 @@
             }
         }
     },
-    "required": ["name", "description", "functions_py", "data_type", "intialize_function", "train_function", "save_function"]
+    "required": ["name", "description", "update_rate", "functions_py", "data_type", "intialize_function", "train_function", "save_function"]
 }
