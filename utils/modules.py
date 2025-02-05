@@ -319,31 +319,11 @@ class HyperparameterFetcher:
         return [hyperparameter.to_dict() for hyperparameter in self.hyperparameters]
 
 class ModelTemplate:
-    def __init__(self, error_handler = None) -> None:
+    def __init__(self) -> None:
         """
         Initialize a ModelTemplate instance.
         """
-        self.model : torch.nn.Module = None
-        self.model_data : list[ModelData] = []
-        self.additional_training_data : list[AdditionalTrainingData] = []
-        self.training_loss : list[float] = []
-        self.validation_loss : list[float] = []
-
-        self.error : str = None
-        self.error_handler : TrainingController.ErrorHandler = error_handler
-
-    def Initialize(self) -> None:
-        pass
-
-    def Train(self) -> None:
-        pass
-
-    def Save(self) -> None:
-        pass
-
-    def RaiseError(self, error : str, traceback : str) -> None:
-        self.error = True
-        self.error_handler(error, traceback)
+        
 
 class Model:
     name : str
