@@ -114,8 +114,9 @@ The name of your model. This will be displayed on the dashboard, so make sure it
 !!!
 This value is required
 !!!
+
 **Description**\
-The default value of the hyperparameter. This value's type will be assumed as they hyperparameter's type, NoneType values will raise an exception.
+The default value of the hyperparameter. This value's type will be assumed as they hyperparameter's type, NoneType values will raise an exception. NOTE: if the value is a `path` type, it should be relative to the `model_types` directory
 
 **Example**
 ```json
