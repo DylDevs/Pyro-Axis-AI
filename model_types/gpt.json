@@ -7,14 +7,22 @@
     "data_type": "text",
     "hyperparameters": [
         {
+            "name": "Epochs",
+            "default": 20,
+            "min_value": 1,
+            "max_value": null,
+            "incriment": 1,
+            "description": "Number of epochs to train for"
+        },
+        {
             "name": "Data JSON",
-            "default": "../data/gpt/train.json",
+            "default": "/gpt/train.json",
             "special_type": "path",
             "description": "Path to the training data in JSON format"
         },
         {
             "name": "Model Save Path",
-            "default": "../models/gpt/model.pt",
+            "default": "/models/gpt/model.pt",
             "special_type": "path",
             "description": "Path to save the model to"
         },
@@ -187,9 +195,10 @@
             "description": "Ratio of validation loss to training loss for early stopping"
         }
     ],
-    "intialize_function": "Initialize",
+    "initialize_function": "Initialize",
     "train_function": "Train",
     "save_function": "Save",
+    "after_train_function": "AfterTrain",
     "progress_bars": [
         {
             "name": "controller.epoch",
@@ -240,6 +249,16 @@
                     "title": "Vocab Size",
                     "value": "vocab_size",
                     "description": "Number of unique tokens in the dataset"
+                },
+                {
+                    "title": "Total Steps",
+                    "value": "total_steps",
+                    "description": "Total number of training steps"
+                },
+                {
+                    "title": "Warmup Steps",
+                    "value": "warmup_steps",
+                    "description": "Number of warmup steps"
                 }
             ]
         },

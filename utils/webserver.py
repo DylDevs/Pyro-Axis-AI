@@ -71,40 +71,29 @@ async def root(request: Request):
 async def models():
     global model_loader
     model_types = model_loader.GetModelTypes()
-    model_types_dict = []
 
-    if not isinstance(model_types, list): raise TypeError("Model types must be a list of model types")
+    model_types_dict = []
     for model_type in model_types:
-        if not isinstance(model_type, modules.Model): raise TypeError("Model type must be an instance of Model")
-        model_types_dict.append(model_type.to_dict())
+        model_types_dict.append(model_type.FrontendData())
+
     return {"status": "ok", "models": model_types_dict}
 
-# Hyperparameters will be {"model_index": x, "hyperparameters": {"name": value}}
 @app.post("/train")
 def train(data: Any = Body(...)):
     global model_loader, training_controllers
+
     model_types = model_loader.GetModelTypes()
-    hyps = []
+    parent_model : modules.Model = model_types[data["model_index"]]
 
-    model_index = data["model_index"]
-    hyperparameters = data["hyperparameters"]
+    new_json_data = parent_model.json_data
+    new_json_data["hyperparameters"] = data["hyperparameters"] # [{"name": "name", "value": "value"}, ...]
+    new_model = modules.Model(new_json_data, parent_model.model_class)
 
-    for key, value in hyperparameters.items():
-        hyps.append(modules.Hyperparameter(key, value))
-    
-    parent_model : modules.Model = model_types[model_index]
-    training_model = modules.Model(
-        name=parent_model.name,
-        description=parent_model.description,
-        data_type=parent_model.data_type,
-        model_class=parent_model.model_class,
-        hyperparameters=hyps
-    )
+    print(f"Request to train {new_model.json_data['name']} received", color=modules.Colors.BLUE)
+    training_controller = modules.TrainingController(new_model)
+    if training_controller.status == "Error": return {"status": "error", "error": training_controller.error_tb}
 
-    print(f"Request to train {training_model.name} received", color=modules.Colors.BLUE)
-    training_controller = modules.TrainingController(training_model)
-    if training_controller.error: return {"status": "error", "error": training_controller.error, "traceback": training_controller.traceback}
-    training_controller.Train()
+    training_controller.Train() # Starts training thread
     training_controllers.append(training_controller)
 
     return {"status": "ok"}
@@ -114,7 +103,11 @@ def status():
     global training_controllers
     data = []
     for training_controller in training_controllers:
-        data.append(training_controller.GetFrontendData())
+        frontend_data = training_controller.FrontendData()
+        if frontend_data is None:
+            training_controllers.remove(training_controller)
+            return {"status": "error", "error": training_controller.error_str, "traceback": training_controller.error_tb}
+        data.append(training_controller.FrontendData())
     print(f"Status Data: {data}")
     
     return {"status": "ok", "data": data}

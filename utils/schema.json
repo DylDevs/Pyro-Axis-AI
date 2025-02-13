@@ -24,9 +24,10 @@
                 "required": ["name", "default"]
             }
         },
-        "intialize_function": { "type": "string" },
+        "initialize_function": { "type": "string" },
         "train_function": { "type": "string" },
         "save_function": { "type": "string" },
+        "after_train_function": { "type": "string" },
         "progress_bars": {
             "type": "array",
             "items": {
@@ -66,5 +67,5 @@
             }
         }
     },
-    "required": ["name", "description", "update_rate", "functions_py", "data_type", "intialize_function", "train_function", "save_function"]
+    "required": ["name", "description", "update_rate", "functions_py", "data_type", "initialize_function", "train_function", "save_function"]
 }

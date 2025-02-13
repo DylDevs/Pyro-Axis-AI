@@ -17,90 +17,149 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/loading";
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card";
+import ErrorPopup from "@/components/error_popup";
+import { set } from "date-fns";
 
-// @ts-ignore | Prevents module not found error from js-cookie, even though it is installed
-import Cookies from 'js-cookie';
+class ProgressBar {
+  name: string;
+  tooltip: string | null;
+  current: number;
+  total: number;
+  progress_text: string;
 
-class Model {
+  constructor(data: any) {
+    this.name = data["name"];
+    this.tooltip = data["tooltip"];
+    this.current = data["current"];
+    this.total = data["total"];
+    this.progress_text = data["progress_text"];
+  }
+}
+
+class Graph {
+  // TODO: implement
+}
+
+class DropdownData {
+  title: string;
+  value: string;
+  tooltip: string | null;
+
+  constructor(title: string, value: string, tooltip: string | null) {
+    this.title = title;
+    this.value = value;
+    this.tooltip = tooltip;
+  }
+}
+class Dropdown {
+  title: string;
+  tooltip: string | null;
+  data: DropdownData[];
+
+  constructor(data: any) {
+    this.title = data["title"];
+    this.tooltip = data["tooltip"];
+    this.data = []
+    for (let i = 0; i < data["data"].length; i++) {
+      this.data.push(new DropdownData(data["data"][i]["title"], data["data"][i]["value"], data["data"][i]["tooltip"]))
+    }
+  }
+}
+
+class TraingModel {
   type: string;
   data_type: string;
   status: string;
   epoch: number;
   epochs: number;
-  training_losses : number[];
-  val_losses : number[];
-  best_epoch: number;
-  best_training_loss: number;
-  best_val_loss: number;
-  elapsed: number;
   estimated_time: number | string;
-  time_per_epoch: number;
-  model_data : any;
-  additional_training_data : any;
-  hyperparameters: any;
+  progress_bars: ProgressBar[];
+  graphs: any;
+  dropdowns: Dropdown[];
 
   constructor(data: any) {
-    this.type = data.type;
-    this.data_type = data.data_type;
-    this.status = data.status;
-    this.epoch = data.epoch;
-    this.epochs = data.epochs;
-    this.training_losses = data.training_losses;
-    this.val_losses = data.val_losses;
-    this.best_epoch = data.best_epoch;
-    this.best_training_loss = data.best_training_loss;
-    this.best_val_loss = data.best_val_loss;
-    this.elapsed = data.elapsed;
-    this.estimated_time = data.estimated_time;
-    this.time_per_epoch = data.time_per_epoch;
-    this.model_data = data.model_data;
-    this.additional_training_data = data.additional_training_data;
-    this.hyperparameters = data.hyperparameters;
+    this.type = data["type"];
+    this.data_type = data["data_type"];
+    this.status = data["status"];
+    this.epoch = data["epoch"];
+    this.epochs = data["epochs"];
+    this.estimated_time = data["estimated_time"];
+    this.progress_bars = [];
+    this.graphs = [];
+    this.dropdowns = [];
+    for (let i = 0; i < data["progress_bars"].length; i++) {
+      this.progress_bars.push(new ProgressBar(data["progress_bars"][i]))
+    }
+    // TODO: implement graph
+    for (let i = 0; i < data["dropdowns"].length; i++) {
+      this.dropdowns.push(new Dropdown(data["dropdowns"][i]))
+    }
   }
 }
 
-class Hyperparameter {
+class ModelTypeHyperparameter {
   name: string;
-  value: any;
-  min_value: number;
-  max_value: number;
-  incriment: number;
-  special_type: "path" | "dropdown";
-  options: string[];
-  description: string;
+  default: string | number | boolean;
+  min_value: number | null;
+  max_value: number | null;
+  incriment: number | null;
+  special_type: string | null;
+  options: string[] | null;
+  description: string | null;
 
-  constructor(name: string, value: any, min_value: number, max_value: number, incriment: number, special_type: "path" | "dropdown", options: string[], description: string) {
-    this.name = name;
-    this.value = value;
-    this.min_value = min_value;
-    this.max_value = max_value;
-    this.incriment = incriment;
-    this.special_type = special_type;
-    this.options = options;
-    this.description = description;
+  constructor(data: any) {
+    this.name = data["name"];
+    this.default = data["default"];
+    this.min_value = data["min_value"] ?? null;
+    this.max_value = data["max_value"] ?? null;
+    this.incriment = data["incriment"] ?? null;
+    this.special_type = data["special_type"] ?? null;
+    this.options = data["options"] ?? null;
+    this.description = data["description"] ?? null;
   }
 }
 
-function HypToDict(hyperparameters: Hyperparameter[]) {
-  let dict : any = {};
-  for (let i = 0; i < hyperparameters.length; i++) {
-    dict[hyperparameters[i].name] = hyperparameters[i].value;
+class CompletedHyperparameter {
+  name: string;
+  value: string | number | boolean;
+
+  constructor(data: any) {
+    this.name = data["name"];
+    this.value = data["value"];
   }
-  console.log(dict);
-  return dict;
+
+  ToDict() {
+    return {
+      "name": this.name,
+      "value": this.value
+    }
+  }
 }
 
-class ModelData {
+class ModelType {
   name: string;
   description: string;
   data_type: string;
-  hyperparameters: Hyperparameter[];
+  hyperparameters: ModelTypeHyperparameter[];
 
-  constructor(name: string, description: string, data_type: string, hyperparameters: Hyperparameter[]) {
-    this.name = name;
-    this.description = description;
-    this.data_type = data_type;
-    this.hyperparameters = hyperparameters;
+  constructor(data: any) {
+    this.name = data["name"];
+    this.description = data["description"];
+    this.data_type = data["data_type"];
+    this.hyperparameters = [];
+    for (let i = 0; i < data["hyperparameters"].length; i++) {
+      this.hyperparameters.push(new ModelTypeHyperparameter(data["hyperparameters"][i]))
+    }
+  }
+}
+
+class ErrorPopupData {
+  error: string;
+  traceback: string;
+
+  constructor(error: string, traceback: string) {
+    this.error = error;
+    this.traceback = traceback;
   }
 }
 
@@ -119,37 +178,19 @@ const getGreeting = () => {
   }
 };
 
-function formatDuration(seconds: number): string {
-  if (seconds < 0) return "0 seconds";
-
-  const days = Math.floor(seconds / (24 * 3600));
-  seconds %= 24 * 3600;
-  const hours = Math.floor(seconds / 3600);
-  seconds %= 3600;
-  const minutes = Math.floor(seconds / 60);
-  seconds %= 60;
-
-  const parts = [];
-  if (days > 0) parts.push(`${days} days`);
-  if (hours > 0) parts.push(`${hours} hours`);
-  if (minutes > 0) parts.push(`${minutes} minutes`);
-  if (seconds > 0 || parts.length === 0) parts.push(`${seconds.toFixed(1)} seconds`);
-
-  return parts.join(", ");
-}
-
 function ConvertToProgressValue(value: number, max: number): number {
   return (value / max) * 100
 }
 
 export default function Index() {
   const { push } = useRouter();
-  const [greeting, setGreeting] = useState(getGreeting());
+  const [greeting, setGreeting] = useState("Loading...");
   const [showLoading, setShowLoading] = useState(false);
 
-  const [models, setModels] = useState<Model[]>([])
+  const [models, setModels] = useState<TraingModel[]>([])
   const [hovered_model_index, setHovered_model_index] = useState(-1);
   const [current_model_index, set_current_model_index] = useState(-1);
+  const [error_popup_data, setErrorPopupData] = useState<ErrorPopupData | null>(null);
 
   const sidebarScrollRef = useRef(null);
   const sidebarScrollPosition = useRef(0);
@@ -212,9 +253,12 @@ export default function Index() {
   }, [handleMouseDown, handleMouseUp, handleMouseMove]);
   
   useEffect(() => {
+    setGreeting(getGreeting());
+  
     const interval = setInterval(() => {
       if (current_model_index === -1) setGreeting(getGreeting());
     }, 30000);
+  
     return () => clearInterval(interval);
   }, [current_model_index]);
 
@@ -240,22 +284,31 @@ export default function Index() {
   useEffect(() => {
     const interval = setInterval(() => {
       async function UpdateModels() {
-        const data = await GetModelStatuses();
-        const updated_data : Model[] = []
+        let data = await GetModelStatuses();
+
+        if (data.error ?? false) {
+          setErrorPopupData(new ErrorPopupData(data.error, data.traceback))
+          return
+        }
+        
+        data = data.data
+        const updated_data : TraingModel[] = []
 
         if (Array.isArray(data) && data.forEach) {
           try { 
             data.forEach(function UpdateData(entry : any) {
-              updated_data.push(new Model(entry))
+              updated_data.push(new TraingModel(entry))
             })
             if (JSON.stringify(updated_data) !== JSON.stringify(models)) {
               setModels(updated_data);
             }
           } catch (error) {
             console.log("Failed to update models:", error);
+            setModels([])
           }
         } else {
           console.log("Expected an array, but got:", data);
+          setModels([])
         }
       }
 
@@ -270,9 +323,9 @@ export default function Index() {
     try {
       toast.loading("Retrieving models...");
 
-      const model_data = await GetModelsFromServer();
-      HypToDict(model_data[0].hyperparameters);
-
+      const model_data_dict = await GetModelsFromServer();
+      const model_data = model_data_dict.map((model_data: any) => new ModelType(model_data));
+      
       toast.dismiss();
 
       if (!model_data) {
@@ -290,7 +343,8 @@ export default function Index() {
 
 
   function CreateNewModel() {
-    const [modelsData, setModelsData] = useState<ModelData[] | null>(null);
+    const [modelsData, setModelsData] = useState<ModelType[] | null>(null);
+    const [completed_hyps, setCompletedHyps] = useState<CompletedHyperparameter[]>([]);
     const [model_selector_open, setModelSelectorOpen] = useState<boolean>(true);
     const [set_hyp_selector_open, setHypSelectorOpen] = useState<boolean>(false);
     const [model_hyp_index, setModelHypIndex] = useState<string>("-1"); // Stringified number index (for selector key)
@@ -300,6 +354,14 @@ export default function Index() {
       const fetchData = async () => {
         const data = await GetModels();
         if (data) {
+          data.forEach((model: any) => {
+            model.hyperparameters.forEach((hyperparameter: any) => {
+              setCompletedHyps((prevCompletedHyps) => [...prevCompletedHyps, new CompletedHyperparameter({
+                "name": hyperparameter.name,
+                "value": hyperparameter.default
+              })]);
+            });
+          });
           setModelsData(data);
         } else {
           toast.error("Failed to retrieve models. Check the console for more info.");
@@ -311,7 +373,11 @@ export default function Index() {
 
     function ChangeHypValue(index: number, value: any) {
       if (!modelsData) return;
-      modelsData[model_hyp_index_int].hyperparameters[index].value = value;
+      setCompletedHyps((prevCompletedHyps) => {
+        const newHyps = [...prevCompletedHyps];
+        newHyps[index].value = value;
+        return newHyps;
+      });
     }
 
     function HandleModelSelection() {
@@ -328,7 +394,14 @@ export default function Index() {
     function HandleHypSelection() {
       if (!modelsData) return;
       setHypSelectorOpen(false);
-      SendTrainingRequest(HypToDict(modelsData[model_hyp_index_int].hyperparameters), model_hyp_index_int);
+      let hyp_dict: any = []
+      completed_hyps.forEach((hyp) => {
+        hyp_dict.push({
+          "name": hyp.name,
+          "value": hyp.value
+        })
+      })
+      SendTrainingRequest(hyp_dict, model_hyp_index_int);
       setCreatingModel(false);
     }
 
@@ -382,20 +455,20 @@ export default function Index() {
                       <p className="text-zinc-500 text-sm mb-2">{param.description}</p>
                       {param.special_type === null && (
                         <>
-                          {typeof param.value === 'number' && (
+                          {typeof completed_hyps[index].value === 'number' && param.special_type === null && (
                             <Input type="number" 
-                              value={param.value ? param.value : 0} 
+                              value={completed_hyps[index].value} 
                               min={param.min_value ? param.min_value : -Infinity}
                               max={param.max_value ? param.max_value : Infinity} 
                               step={param.incriment ? param.incriment : 1}
                               onChange={(e) => ChangeHypValue(index, Number(e.target.value))}
                             />
                           )}
-                          {typeof param.value === 'string' && (
-                            <Input type="text" value={param.value} onChange={(e) => ChangeHypValue(index, e.target.value)} />
+                          {typeof completed_hyps[index].value === 'string' && param.special_type === null && (
+                            <Input type="text" value={completed_hyps[index].value} onChange={(e) => ChangeHypValue(index, e.target.value)} />
                           )}
-                          {typeof param.value === 'boolean' && (
-                            <Select defaultValue={param.value === true ? "Yes" : "No"} onValueChange={(value) => ChangeHypValue(index, value === "Yes" ? true : false)}>
+                          {typeof completed_hyps[index].value === 'boolean' && param.special_type === null && (
+                            <Select defaultValue={completed_hyps[index].value === true ? "Yes" : "No"} onValueChange={(value) => ChangeHypValue(index, value === "Yes" ? true : false)}>
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select an option" />
                               </SelectTrigger>
@@ -408,12 +481,12 @@ export default function Index() {
                         </>
                       )}
             
-                      {param.special_type === 'path' && (
-                        <Input type="text" value={param.value} onChange={(e) => ChangeHypValue(index, e.target.value)} />
+                      {param.special_type === 'path' && typeof completed_hyps[index].value === 'string' && (
+                        <Input type="text" value={completed_hyps[index].value} onChange={(e) => ChangeHypValue(index, e.target.value)} />
                       )}
             
-                      {param.special_type === 'dropdown' && (
-                        <Select value={param.value} onValueChange={(value) => ChangeHypValue(index, value)}>
+                      {param.special_type === 'dropdown' && typeof completed_hyps[index].value === 'string' && param.options && (
+                        <Select value={completed_hyps[index].value} onValueChange={(value) => ChangeHypValue(index, value)}>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select an option" />
                           </SelectTrigger>
@@ -500,7 +573,7 @@ export default function Index() {
     );
   });
 
-  const LossGraph = memo(({ training_losses, validation_losses }: { training_losses: number[]; validation_losses: number[] }) => {
+  const LossGraph = memo(({ train_losses, val_losses }: { train_losses: number[]; val_losses: number[] }) => {
     const t_loss_color = "#ff0000";
     const v_loss_color = "#00ff00";
   
@@ -515,10 +588,10 @@ export default function Index() {
       },
     } satisfies ChartConfig;
   
-    const data = training_losses.map((training_loss, index) => ({
+    const data = train_losses.map((train_loss, index) => ({
       "Epoch": index + 1,
-      "Training Loss": training_loss,
-      "Validation Loss": validation_losses[index],
+      "Training Loss": train_loss,
+      "Validation Loss": val_losses[index],
     }));
   
     return (
@@ -576,7 +649,7 @@ export default function Index() {
     );
   });
   
-  const ModelVisualizer = memo(({ model }: { model: Model }) => {
+  const ModelVisualizer = memo(({ model }: { model: TraingModel }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollPositionRef = useRef<number>(0);
 
@@ -600,7 +673,7 @@ export default function Index() {
       <Card className="flex flex-col ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black overflow-y-auto" ref={containerRef}>
         <div className="m-4 overflow-y-auto overflow-x-hidden">
           <h1 className="text-3xl font-bold mb-4">{model.type}</h1>
-          <p className="text-sm">{model.status} • {typeof model.estimated_time === "number" ? formatDuration(model.estimated_time) : model.estimated_time} remaining</p>
+          <p className="text-sm">{model.status} • {model.estimated_time} remaining</p>
           {model.status === "Initializing" && (
             <div className="flex items-center justify-center w-full h-full">
               <p className="text-sm text-zinc-500">Model is initializing, please wait...</p>
@@ -608,80 +681,36 @@ export default function Index() {
           )}
           {model.status === "Training" && (
             <div>
-              <div className="flex flex-col gap-3 mt-8">
-                <h2 className="text-xl font-bold mb-1">Epochs</h2>
-                <Progress value={ConvertToProgressValue(model.epoch, model.epochs)} className="h-2 w-[calc(100vw-380px)]" />
-                <p>{model.epoch} out of {model.epochs} epochs ({((model.epoch / model.epochs) * 100).toFixed(1)}%)</p>
-              </div>
-              {typeof model.estimated_time === "number" && model.estimated_time > 0 && (
-                <div className="flex flex-col gap-3 mt-8">
-                  <h2 className="text-xl font-bold mb-1">Time Elapsed</h2>
-                  <Progress value={ConvertToProgressValue(model.elapsed, model.estimated_time + model.elapsed)} className="h-2 w-[calc(100vw-380px)]" />
-                  <p>{formatDuration(model.elapsed)} out of {formatDuration(model.estimated_time + model.elapsed)} ({((model.elapsed / model.estimated_time) * 100).toFixed(1)}%)</p>
+              {model.progress_bars.map((progress_bar, index) => (
+                <div className="flex flex-col gap-3 mt-8" key={index}>
+                  <h2 className="text-xl font-bold mb-1">{progress_bar.name}</h2>
+                  <Progress value={ConvertToProgressValue(progress_bar.current, progress_bar.total)} className="h-2 w-[calc(100vw-380px)]" />
+                  <p>{progress_bar.progress_text}</p>
                 </div>
-              )}
-              {model.training_losses.length > 0 && model.val_losses.length > 0 && (
-                <div className="mt-8">
-                  <LossGraph training_losses={model.training_losses} validation_losses={model.val_losses} />
-                </div>
-              )}
+              ))}
+              <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] my-8" />
+              {/* TODO: Add graphs */}
               <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] my-8" />
               <h1 className="text-2xl font-bold mb-4 ml-1">Additional information:</h1>
               <div className="w-[calc(100%-20px)] ml-[5px]">
-                {model.additional_training_data.length > 0 && (
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="training_stats">
-                      <AccordionTrigger className="text-lg font-bold">Additional Training Data</AccordionTrigger>
-                      <AccordionContent>
-                        {/* @ts-ignore */}
-                        {Object.entries(model.model_data).map(([_, data]: [string, { name: string; value: boolean | string | number }], index) => (
-                          <div key={index} className="flex flex-row w-full justify-between mb-6">
-                            <p className="text-md font-bold">{data.name}</p>
-                            <p className="text-md mr-4">
-                              {typeof data.value === "boolean" ? data.value ? "Yes" : "No" : data.value}
-                            </p>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                )}
-                {model.model_data.length > 0 && (
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="training_stats">
-                      <AccordionTrigger className="text-lg font-bold">Model Data</AccordionTrigger>
-                      <AccordionContent>
-                        {/* @ts-ignore */}
-                        {Object.entries(model.model_data).map(([_, data]: [string, { name: string; value: boolean | string | number }], index) => (
-                          <div key={index} className="flex flex-row w-full justify-between mb-6">
-                            <p className="text-md font-bold">{data.name}</p>
-                            <p className="text-md mr-4">
-                              {typeof data.value === "boolean" ? data.value ? "Yes" : "No" : data.value}
-                            </p>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                )}
-                {model.hyperparameters.length > 0 && (
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="training_stats">
-                      <AccordionTrigger className="text-lg font-bold">Hyperparameters</AccordionTrigger>
-                      <AccordionContent>
-                        {/* @ts-ignore */}
-                        {Object.entries(model.hyperparameters).map(([_, data]: [string, { name: string; value: boolean | string | number }], index) => (
-                          <div key={index} className="flex flex-row w-full justify-between mb-6">
-                            <p className="text-md font-bold">{data.name}</p>
-                            <p className="text-md mr-4">
-                              {typeof data.value === "boolean" ? data.value ? "Yes" : "No" : data.value}
-                            </p>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                )}
+              {model.dropdowns.map((dropdown, index) => (
+                <Accordion type="single" collapsible>
+                  <AccordionItem value={`item-${index}`}>
+                    <AccordionTrigger className="text-lg font-bold">{dropdown.title}</AccordionTrigger>
+                    <AccordionContent>
+                      {/* @ts-ignore */}
+                      {Object.entries(dropdown.data).map(([_, data]: [string, { name: string; value: boolean | string | number }], index) => (
+                        <div key={index} className="flex flex-row w-full justify-between mb-6">
+                          <p className="text-md font-bold">{data.name}</p>
+                          <p className="text-md mr-4">
+                            {typeof data.value === "boolean" ? data.value ? "Yes" : "No" : data.value}
+                          </p>
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              ))}
               </div>
             </div>
           )}
@@ -692,8 +721,9 @@ export default function Index() {
 
   return (
     <div className="flex flex-row">
+      {error_popup_data && <ErrorPopup error={error_popup_data.error} traceback={error_popup_data.traceback} />}
       {showLoading ? (
-        <Loading loading_text="Retrieving models..." />
+        <Loading loading_text="Retrieving models..." fullscreen />
       ) : (
         <>
           <Sidebar />

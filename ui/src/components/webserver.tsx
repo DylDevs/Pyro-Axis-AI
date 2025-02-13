@@ -23,7 +23,7 @@ async function FetchServer(extension: string, body: any = {}, method : string = 
     if (data.status !== "ok" && error) {
       throw new Error("Failed to get data from server: " + data.traceback);
     } else if (data.status !== "ok" && !error) {
-      return false;
+      return data;
     }
 
     return data;
@@ -66,8 +66,8 @@ export async function SendTrainingRequest(hyperparameters : any, model_index : n
 }
 
 export async function GetModelStatuses() {
-  let data = await FetchServer("/status");
-  return data.data;
+  let data = await FetchServer("/status", {}, "GET", false);
+  return data
 }
 
 export async function StartDocs() {

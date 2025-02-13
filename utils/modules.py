@@ -1,26 +1,44 @@
-from typing import Literal
 import numpy as np
+import jsonschema
 import threading
 import importlib
+import traceback
 import datetime
+import inspect
 import torch
+import json
 import time
 import sys
 import os
 
+# TODO: Test and add QOL features as needed
+
 MODEL_TYPES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model_types")
+DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
+SUPPORTED_CONTROLLER_PBS = ["epoch", "time"]
 
 class LoadExceptions:
+    class MissingFile(Exception): pass
+    class JSONError(Exception): pass
     class MissingVar(Exception): pass
     class HypNotList(Exception): pass
     class TypeException(Exception): pass
     class IncorrectType(Exception): pass
 
+class ModelExceptions:
+    class MissingHyperparameter(Exception): pass
+    class MissingVar(Exception): pass
+    class InvalidVar(Exception): pass
+
 class ModelTypeLoader:
     def __init__(self, model_files):
         self.model_files = model_files
+        self.json_schema = json.load(open(os.path.join(os.path.dirname(__file__), "schema.json"), "r"))
         self.model_types : list[Model] = []
-        self.file_mod_times = {file: os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file)) for file in model_files}
+        self.model_file_mod_times = [{"json": None, "py": None} for _ in model_files]
+        self.updating = False
+
         self.InitialLoad()
         threading.Thread(target=self._listener_thread, daemon=True).start()
 
@@ -29,10 +47,15 @@ class ModelTypeLoader:
         for i, filename in enumerate(self.model_files):
             try:
                 model = self.LoadModelType(filename)
-                print(f"Loaded {model.name} model", color=Colors.GREEN)
+                print(f"Loaded {model.json_data['name']} model", color=Colors.GREEN)
                 self.model_types.append(model)
             except Exception as e:
-                print(f"Failed to load model {filename.replace('_', ' ').title()}: {e}", color=Colors.RED)
+                try:
+                    data = json.load(open(os.path.join(MODEL_TYPES_PATH, filename), "r"))
+                    title = data["name"]
+                except:
+                    title = filename.replace('_', ' ').replace('.json', '').title()
+                print(f"Failed to load model {title}: {e}\n{traceback.format_exc()}", color=Colors.RED)
 
         if len(self.model_types) == 0:
             print("No valid models found, exiting", color=Colors.RED)
@@ -44,66 +67,169 @@ class ModelTypeLoader:
     def _listener_thread(self):
         while True:
             edited = False
+            self.updating = True
             for i, file in enumerate(self.model_files):
-                current_mod_time = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file))
-                if current_mod_time != self.file_mod_times[file]:
-                    model_name = self.model_types[i].name
+                current_json_mod_time = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file))
+                current_py_mod_time = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, self.model_types[i].json_data["functions_py"]))
+                if self.model_file_mod_times[i]["json"] != current_json_mod_time or self.model_file_mod_times[i]["py"] != current_py_mod_time:
+                    model_name = self.model_types[i].json_data["name"]
                     edited = True
                     print(f"{model_name} has been updated. Reloading...", color=Colors.BLUE, reprint=True)
                     self.model_types[i] = self.LoadModelType(file)
                     print(f"{model_name} has been reloaded.", color=Colors.GREEN, reprint=True)
-                    self.file_mod_times[file] = current_mod_time
+                    self.model_file_mod_times[i]["json"] = current_json_mod_time
+                    self.model_file_mod_times[i]["py"] = current_py_mod_time
             empty_line() if edited else None
+            self.updating = False
             time.sleep(5) # Lock to 0.2FPS
     
     def LoadModelType(self, file: str):
-        model_import = importlib.import_module(f"model_types.{file[:-3]}")
-        model_name = file[:-3] if "name" not in model_import.__dict__ else model_import.name
-
-        # Check for required variables
-        required_variables = ["name", "description", "hyperparameters", "data_type"]
-        for var in required_variables:
-            if var not in model_import.__dict__:
-                raise LoadExceptions.MissingVar(f"Model {model_name} is missing the {var} variable (Check the in-app docs for more info)")
-
-        variable_types = [[model_import.name, str], [model_import.description, str], [model_import.data_type, str], [model_import.hyperparameters, list]]
-        for variable in variable_types:
-            if not isinstance(variable[0], variable[1]):
-                raise LoadExceptions.TypeException(f"Model {model_name} {variable[0].split('.')[-1]} is not a {variable[1]} (Check the in-app docs for more info)")
+        # Check for valid JSON file
+        if not os.path.exists(os.path.join(MODEL_TYPES_PATH, file)):
+            raise LoadExceptions.MissingFile(f"{file} does not exist (Check the in-app documentation for more info)")
+        if not file.endswith(".json"):
+            raise LoadExceptions.IncorrectType(f"{file} is not a .json file (Check the in-app documentation for more info)")
         
-        for hyperparameter in model_import.hyperparameters:
-            if not isinstance(hyperparameter, Hyperparameter):
-                raise TypeError(f"Model {model_name} hyperparameter {hyperparameter.name} is not a RequiredHyperparameter object (Check the in-app docs for more info)")
+        # Load JSON
+        self.model_file_mod_times[self.model_files.index(file)]["json"] = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, file))
+        json_data = json.load(open(os.path.join(MODEL_TYPES_PATH, file), "r"))
+
+        # Use the schema to validate the model information
+        try:
+            jsonschema.validate(instance=json_data, schema=self.json_schema)
+        except jsonschema.ValidationError as ve:
+            path = "data" + "".join([f'["{p}"]' for p in ve.path])
+            raise LoadExceptions.JSONError(f"JSON Validation Error at {path} - {ve.message}")
+        except jsonschema.SchemaError as se:
+            raise LoadExceptions.JSONError(f"Schema error - {se.message}")
+        
+        # Load Python file and ensure correct data
+        if not os.path.exists(os.path.join(MODEL_TYPES_PATH, json_data["functions_py"])):
+            raise LoadExceptions.MissingFile(f"{json_data['functions_py']} does not exist (Check the in-app documentation for more info)")
+        
+        try:
+            path = os.path.join(MODEL_TYPES_PATH, json_data["functions_py"])
+            spec = importlib.util.spec_from_file_location(json_data["functions_py"].replace(".py", ""), path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[json_data["functions_py"].replace(".py", "")] = module
+            spec.loader.exec_module(module)
+        except Exception as e:
+            raise LoadExceptions.MissingFile(f"Failed to import {json_data['functions_py']}: {e} (Check the in-app documentation for more info)")
+        self.model_file_mod_times[self.model_files.index(file)]["py"] = os.path.getmtime(os.path.join(MODEL_TYPES_PATH, json_data["functions_py"]))
+
+        if not hasattr(module, "Model"):
+            raise LoadExceptions.MissingVar(f"Model class not found in {json_data['functions_py']} (Check the in-app documentation for more info)")
+        model_class = getattr(module, "Model")
+        if not issubclass(model_class, ModelTemplate):
+            raise LoadExceptions.MissingVar(f"Model class is not a subclass of ModelTemplate (Check the in-app documentation for more info)")
+
+        # [function, [required_args]]
+        required_methods = [[json_data["initialize_function"], []], [json_data["train_function"], []], [json_data["save_function"], []]]
+        for method in required_methods:
+            if not hasattr(model_class, method[0]) or not callable(getattr(model_class, method[0])):
+                raise LoadExceptions.MissingVar(f"Required method {method[0]} not found in {json_data['functions_py']} Model class (Check the in-app documentation for more info)")
+            args = list(inspect.signature(getattr(model_class, method[0])).parameters.keys())
+            for arg in method[1]:
+                if arg not in args:
+                    raise LoadExceptions.MissingVar(f"{method[0]} is required to have argument {arg} (Check the in-app documentation for more info)")
+
+        # Check JSON data (Python checks will be conducted along the way)
+        for var in json_data["hyperparameters"]:
+            name = var["name"]
+            if isinstance(var["default"], (str, bool)):
+                default_type = str if isinstance(var["default"], str) else bool
+                if "min_value" in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has a min_value set (Check the in-app documentation for more info)")
+                if "max_value" in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has a max_value set (Check the in-app documentation for more info)")
+                if "incriment" in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has an incriment set (Check the in-app documentation for more info)")
+            elif isinstance(var["default"], (int, float)):
+                default_type = int if isinstance(var["default"], int) else float
+                if "min_value" not in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has no min_value set (Check the in-app documentation for more info)")
+                if "max_value" not in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has no max_value set (Check the in-app documentation for more info)")
+                if "incriment" not in var:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has no incriment set (Check the in-app documentation for more info)")
+                if type(var["incriment"]) != int and type(var["incriment"]) != float:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has an incriment that is not an int or float (Check the in-app documentation for more info)")
+                if var["incriment"] <= 0:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a {default_type} but has an incriment less than or equal to 0 (Check the in-app documentation for more info)")
+
+                min_value = float("-inf") if var["min_value"] == None else var["min_value"]
+                max_value = float("inf") if var["max_value"] == None else var["max_value"]
+                if min_value >= max_value:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has a min_value greater than or equal to the max_value (Check the in-app documentation for more info)")
+                if var["incriment"] <= 0:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has an incriment less than or equal to 0 (Check the in-app documentation for more info)")
+                if var["incriment"] > max_value - min_value:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has an incriment greater than the max_value minus the min_value (Check the in-app documentation for more info)")
+                if var["default"] < min_value or var["default"] > max_value:
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has a default value outside of the range (Check the in-app documentation for more info)")
+            else:
+                raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has an invalid default type (Check the in-app documentation for more info)")
+
+            if "options" in var and "special_type" not in var:
+                raise LoadExceptions.TypeException(f"Hyperparameter '{name}' has options but is not a dropdown (Check the in-app documentation for more info)")
+
+            if "special_type" in var:
+                if var["special_type"] == "path" and not isinstance(var["default"], str):
+                    raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a path but has no default path (Check the in-app documentation for more info)")
+                elif var["special_type"] == "dropdown":
+                    if "options" not in var:
+                        raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a dropdown but has no options set (Check the in-app documentation for more info)")
+                    if len(var["options"]) == 0:
+                        raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a dropdown but has no options set (Check the in-app documentation for more info)")
+                    for option in var["options"]:
+                        if not isinstance(option, (str, int, float)):
+                            raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a dropdown but has an option that is not a string, int, or float (Check the in-app documentation for more info)")
+                    if var["default"] not in var["options"]:
+                        raise LoadExceptions.TypeException(f"Hyperparameter '{name}' is a dropdown but the default value is not in the options (Check the in-app documentation for more info)")
+
+                if "description" not in var:
+                    var["description"] = None
+
+        if not "Epochs" in [var["name"] for var in json_data["hyperparameters"]]:
+            raise LoadExceptions.MissingVar(f"Hyperparameter 'Epochs' is required (Check the in-app documentation for more info)")
+        if json_data["hyperparameters"][[var["name"] for var in json_data["hyperparameters"]].index("Epochs")]["incriment"] != 1:
+            raise LoadExceptions.TypeException(f"Required hyperparameter 'Epochs' must have an incriment of 1 (Check the in-app documentation for more info)")
+
+        for var in json_data["progress_bars"]:
+            if var["name"].startswith("controller."):
+                found = False
+                for pb in SUPPORTED_CONTROLLER_PBS:
+                    if var["name"] == f"controller.{pb}":
+                        found = True
+                        break
+                if not found:
+                    raise LoadExceptions.TypeException(f"Progress bar '{name}' is attempting to use a non-supported controller progress bar (Check the in-app documentation for more info)")
+                else:
+                    continue # Skip the rest of the checks as this is a default progress bar
+
+            # `current` and `total` values will be checked each time the UI is updated as they may not exist yet
+
+            if "description" not in var:
+                var["description"] = None
+
+            if "{0}" not in var["progress_text"] or "{1}" not in var["progress_text"]:
+                raise LoadExceptions.TypeException( f"Progress bar '{name}' progress_text must contain '{{0}}' and '{{1}}' (Check the in-app documentation for more info)")
+
+        # TODO: for var in json_data["graphs"]:
+
+        for var in json_data["info_dropdowns"]:
+            for data in var["data"]:
+                if "description" not in data:
+                    data["description"] = None
             
-        if not "Epochs" in [hyperparameter.name for hyperparameter in model_import.hyperparameters]:
-            raise LoadExceptions.MissingVar(f"Model {model_name} is missing the Epochs hyperparameter (Check the in-app docs for more info)")
+                # `value` will be checked each time the UI is updated as they may not exist yet
 
-        if model_import.data_type not in ["text", "image", "audio", "other"]:
-            raise LoadExceptions.IncorrectType(f"Model {model_name} data_type is not a valid data type (Should be one of 'text', 'image', 'audio', 'other')")
+            if "description" not in var:
+                var["description"] = None
 
-        if "Model" not in model_import.__dict__:
-            raise LoadExceptions.MissingVar(f"Model {model_name} is missing the Model class (Check the in-app docs for more info)")
-
-        model = model_import.Model
-        if not issubclass(model, ModelTemplate):
-            raise LoadExceptions.TypeException(f"Model {model_name} Model class is not a subclass of ModelTemplate (Check the in-app docs for more info)")
-
-        required_funcs = ["Initialize", "Train", "Save"]
-        for func in required_funcs:
-            if func not in model.__dict__:
-                raise LoadExceptions.MissingVar(f"Model {model_name} is missing the {func} function (Check the in-app docs for more info)")
-
-        model = Model(
-            name = model_import.name, # "name" variable in file
-            description = model_import.description, # "description" variable in file
-            data_type = model_import.data_type, # "data_type" variable in file
-            model_class = model, # "Model" class in file
-            hyperparameters = model_import.hyperparameters # "hyperparameters" variable in file
-        )
-
-        return model
-
-    def Getmodel_types(self):
+        return Model(json_data, model_class)
+    
+    def GetModelTypes(self):
         return self.model_types
 
 class Colors:
@@ -141,210 +267,81 @@ def reset_reprint():
     # Allows for reprints in a row
     print("", end="", show_timestamp=False)
 
-class Hyperparameter:
-    name : str
-    value : str | int | float | bool | None = None
-    
-    default : str | int | float | bool
-    min_value : int | float | None
-    max_value : int | float | None
-    incriment : int | float | None
-    special_type : Literal["path", "dropdown", None]
-    options : list[str | int | float | bool] | None
-    description : str
-
-    def __init__(self, name: str, default: str | int | float | bool, min_value: int | float | None = None, max_value: int | float | None = None, incriment: int | float | None = None, special_type: Literal["path", "dropdown", None] = None, options: list[str | int | float | bool] | None = None, description: str = "") -> None:
-        """
-        Hyperparameter for a model, will be used to ask the user for input on the frontend
-
-        Parameters:
-            name (str): The name of the hyperparameter.
-            default (str | int | float | bool): The default value of the hyperparameter.
-            min_value (int | float | None, optional): The minimum value for the hyperparameter (only for number values).
-            max_value (int | float | None, optional): The maximum value for the hyperparameter (only for number values).
-            incriment (int | float | None, optional): The increment step for the hyperparameter (only for number values).
-            special_type (Literal["path", "dropdown", None], optional): The special type of the hyperparameter.
-            options (list[str | int | float | bool] | None, optional): The list of valid options if special_type is "dropdown".
-            description (str, optional): The description of the hyperparameter.
-        
-        Raises:
-            TypeError: If any parameter is not of the expected type.
-            ValueError: If parameters do not meet certain conditions.
-        """
-        # Type checking
-        if not isinstance(name, str): raise TypeError("Name must be a string")
-        if not isinstance(description, str): raise TypeError("Description must be a string")
-        if not isinstance(default, (str, int, float, bool)): raise TypeError("Hyperparameters can only be strings, integers, floats, or booleans")
-        if min_value != None and not isinstance(min_value, (int, float)): raise TypeError("Min value must be an integer, float, or None")
-        if max_value != None and not isinstance(max_value, (int, float)): raise TypeError("Max value must be an integer, float, or None")
-        if special_type != None and not isinstance(special_type, str): raise TypeError("Special type must be 'path', 'dropdown', or None")
-        if options != None and not isinstance(options, list): raise TypeError("Options must be a list of strings, integers, floats, or booleans")
-        
-        # Condition checking
-        if special_type == "dropdown" and options == None: raise ValueError("Options must be provided if special type is dropdown")
-        if special_type == "path" and not isinstance(default, str): raise ValueError("Default must be a string if special type is path")
-        if min_value != None or max_value != None:
-            if not isinstance(default, (int, float)): raise ValueError("Default must be an integer or float if min and max values are provided")
-            if min_value != None:
-                if not isinstance(min_value, (int, float)): raise ValueError("Min value must be an integer or float")
-                if default < min_value: raise ValueError("Default must be greater than or equal to min value")
-            if max_value != None:
-                if not isinstance(max_value, (int, float)): raise ValueError("Max value must be an integer or float")
-                if default > max_value: raise ValueError("Default must be less than or equal to max value")
-            if min_value != None and max_value != None:
-                if min_value > max_value: raise ValueError("Min value must be less than or equal to max value")
-        if options != None:
-            for option in options:
-                if not isinstance(option, (str, int, float, bool)): raise ValueError("Options must be a list of strings, integers, floats, or booleans")
-            if default not in options: raise ValueError("Default must be in options")
-            
-        if isinstance(default, (int, float)):
-            if incriment == None: incriment = 1
-        else:
-            if min_value != None: raise ValueError("Min value must be None if default is not an integer or float")
-            if max_value != None: raise ValueError("Max value must be None if default is not an integer or float")
-            if incriment != None: raise ValueError("Incriment must be None if default is not an integer or float")
-
-        self.name = name
-        self.value = default
-        self.min_value = min_value
-        self.max_value = max_value
-        self.incriment = incriment
-        self.special_type = special_type
-        self.options = options
-        self.description = description
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "value": self.value,
-            "min_value": self.min_value,
-            "max_value": self.max_value,
-            "incriment": self.incriment,
-            "special_type": self.special_type,
-            "options": self.options,
-            "description": self.description
-        }
-
-class AdditionalTrainingData:
-    name : str
-    value : str | int | float | bool
-
-    def __init__(self, name: str, value: str | int | float | bool) -> None:
-        """
-        A model must have an attribute called self.additional_training_data that is a list of AdditionalTrainingData instances
-        It should hold any extra data that is updated every epoch You should update this attribute every time that the train function is called.
-
-        Args:
-            name (str): Name of the additional training data.
-            value (str | int | float | bool): Value of the additional training data.
-        """
-        if not isinstance(name, str): raise TypeError("Name must be a string")
-        if not isinstance(value, (str, int, float, bool)): raise TypeError("Value must be a string, integer, float, or boolean")
-
-        self.name = name
-        self.value = value
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "value": self.value
-        }
-
-class ModelData:
-    name : str
-    value : str | int | float | bool
-
-    def __init__(self, name: str, value: str | int | float | bool) -> None:
-        """
-        A model can have an attribute called self.model_data that is a list of OptionalModelData instances
-        It should hold any extra data about your model and training utilities. You should update this attribute in the Initialize function
-
-        Args:
-            name (str): Name of the optional model data.
-            value (str | int | float | bool): Value of the optional model data.
-        """
-        if not isinstance(name, str): raise TypeError("Name must be a string")
-        if not isinstance(value, (str, int, float, bool)): raise TypeError("Value must be a string, integer, float, or boolean")
-
-        self.name = name
-        self.value = value
-    
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "value": self.value
-        }
-
-class HyperparameterFetcher:
-    def __init__(self, hyperparameters : list[Hyperparameter]) -> None:
-        if not isinstance(hyperparameters, list): raise TypeError("Hyperparameters must be a list of Hyperparameters")
-        for hyperparameter in hyperparameters: 
-            if not isinstance(hyperparameter, Hyperparameter): raise TypeError("Hyperparameter must be an instance of Hyperparameter")
-
-        self.hyperparameters = hyperparameters
-
-    def GetHyp(self, name : str) -> str | int | float | bool:
-        """
-        Extract a hyperparameter from a list of hyperparameters by name.
-
-        Args:
-            name (str): Name of the hyperparameter to extract.
-            hyperparameters (list[Hyperparameter]): List of hyperparameters.
-
-        Returns:
-            str | int | float | bool: Value of the hyperparameter.
-        """
-        for hyperparameter in self.hyperparameters:
-            if hyperparameter.name == name:
-                return hyperparameter.value
-        raise ValueError(f"Hyperparameter {name} not found")
-    
-    def GetAllHyps(self) -> list[Hyperparameter]:
-        """
-        Return the hyperparameters that the class was initialized with.
-
-        Returns:
-            list[Hyperparameter]: List of hyperparameters.
-        """
-        return self.hyperparameters
-
-    def GetAllHypsAsDict(self) -> list[dict]:
-        """
-        Return the hyperparameters that the class was initialized with as a list of dictionaries.
-
-        Returns:
-            list[dict]: List of hyperparameters as dictionaries.
-        """
-        return [hyperparameter.to_dict() for hyperparameter in self.hyperparameters]
-
 class ModelTemplate:
-    def __init__(self) -> None:
+    def __init__(self, json_data: dict) -> None:
         """
         Initialize a ModelTemplate instance.
         """
-        
+        self.json_data = json_data
+
+        # Get the initialize, train, and save functions from their name
+        self.initialize_function = getattr(self, json_data["initialize_function"])
+        self.train_function = getattr(self, json_data["train_function"])
+        self.save_function = getattr(self, json_data["save_function"])
+        self.after_train_function = getattr(self, json_data["after_train_function"]) if "after_train_function" in json_data else None
+
+        # Paths
+        self.data_path = DATA_PATH
+        self.models_path = MODEL_PATH
+
+        # Losses
+        self.train_losses = []
+        self.val_losses = []
+
+        # For error handling
+        self.error = None
+        self.traceback = None
+
+    def GetHyp(self, name: str):
+        for hyp in self.json_data["hyperparameters"]:
+            if hyp["name"] == name:
+                return hyp["value"]
+
+        self.RaiseException(ModelExceptions.MissingHyperparameter(f"Hyperparameter '{name}' does not exist"))
+
+    def __initialize__(self):
+        try:
+            self.initialize_function()
+        except Exception as e:
+            self.RaiseException(e)
+
+    def __train__(self):
+        try:
+            self.train_function()
+        except Exception as e:
+            self.RaiseException(e)
+
+    def __after_train__(self, controller):
+        if self.after_train_function:
+            try:
+                self.after_train_function(controller)
+            except Exception as e:
+                self.RaiseException(e)
+
+    def __save__(self, model: torch.nn.Module):
+        try:
+            self.save_function(model)
+        except Exception as e:
+            self.RaiseException(e)
+
+    def RaiseException(self, e : Exception, traceback_str : str = None):
+        self.error = e
+        self.traceback = "".join(traceback.format_exception(type(e), e, e.__traceback__)) if not traceback_str else traceback_str
 
 class Model:
-    name : str
-    description : str
-    data_type : str
-    model_class : ModelTemplate
-    hyperparameters : list[Hyperparameter]
+    json_data: dict
+    model_class: ModelTemplate
 
-    def __init__(self, name: str, description: str, data_type: str, model_class: ModelTemplate, hyperparameters: list[Hyperparameter]) -> None:
-        self.name = name
-        self.description = description
-        self.data_type = data_type
+    def __init__(self, json_data: dict, model_class: ModelTemplate) -> None:
+        self.json_data = json_data
         self.model_class = model_class
-        self.hyperparameters = hyperparameters
-    
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "data_type": self.data_type,
-            "hyperparameters": [hyperparameter.to_dict() for hyperparameter in self.hyperparameters]
+
+    def FrontendData(self):
+         return {
+            "name": self.json_data["name"],
+            "description": self.json_data["description"],
+            "data_type": self.json_data["data_type"],
+            "hyperparameters": self.json_data["hyperparameters"],
         }
 
 id_tracker = 0
@@ -355,18 +352,20 @@ def GetID():
 
 class TrainingController:
     def __init__(self, model: Model) -> None:
-        self.name = model.name
-        self.description = model.description
-        self.data_type = model.data_type
-        self.hyperparameters = HyperparameterFetcher(model.hyperparameters) # Initialize the hyperparameter fetcher
+        self.json_data = model.json_data
+        self.model_class = model.model_class
         self.id = GetID()
         self.train_thread = threading.Thread(target=self._train_thread)
 
         self.epoch = 0
         self.status = "Initializing"
 
+        # For the webserver to send to frontend for display
+        self.error_str = None 
+        self.error_tb = None
+
         self.times_per_epoch = []
-        self.best_training_loss = float('inf')
+        self.best_train_loss = float('inf')
         self.best_val_loss = float('inf')
         self.best_model = None
         self.best_epoch = 0
@@ -374,73 +373,225 @@ class TrainingController:
         self.start_time = 0
         self.end_time = 0
 
-        self.error = None
-        self.traceback = None
-
-        self.model : ModelTemplate = model.model_class(self.hyperparameters, self.ErrorHandler) # Initialize the model's controller (not the model itself)
-        self.model.Initialize()
-        # If self.error is true (self.ErrorHandler has been triggered), then the webserver will handle the error
-
-    def GetHyperparameters(self):
-        return self.hyperparameters.GetAllHyps()
+        self.model : ModelTemplate = model.model_class(self.json_data) # Initialize the model's controller (not the model itself)
+        self.model.__initialize__()
+        if self.model.error: # Error in model initialization
+            self.status = "Error"
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            return
+        
+        # Add hyperparameters to the info dropdowns list
+        self.json_data["info_dropdowns"].append({
+            "title": "Hyperparameters",
+            "description": "Hyperparameters selected for this model",
+            "data": [{ "title": hp["name"], "value": f"hyperparameter.{hp['name']}" } for hp in self.json_data["hyperparameters"]],
+        })
     
     def Train(self):
         self.start_time = time.time()
         self.train_thread.start()
 
     def _train_thread(self):
-        for epoch in range(self.hyperparameters.GetHyp("Epochs")):
-            epoch_start_time = time.time()
-            self.status = "Initializing" if epoch == 0 else "Training"
-            self.epoch = epoch
+        try:
+            for epoch in range(self.model.GetHyp("Epochs")):
+                last_train_losses = self.model.train_losses
+                last_val_losses = self.model.val_losses
+                epoch_start_time = time.time()
+                self.status = "Initializing" if epoch == 0 else "Training"
+                self.epoch = epoch
 
-            self.model.Train()
-            if self.error: # self.ErrorHandler has been triggered
-                return
-            
-            if self.model.validation_loss[-1] < self.best_val_loss:
-                self.best_val_loss = self.model.validation_loss[-1]
-                self.best_epoch = self.epoch
-                self.best_model : torch.nn.Module = self.model.model
-            if self.model.training_loss[-1] < self.best_training_loss:
-                self.best_training_loss = self.model.training_loss[-1]
-            
-            self.times_per_epoch.append(time.time() - epoch_start_time)
+                model = self.model.__train__()
+                if self.model.error: # Error in model training
+                    self.status = "Error"
+                    self.ErrorHandler(self.model.error, self.model.traceback)
+                    return
+                
+                print(f"Model Train: {self.model.train_losses}, Model Val: {self.model.val_losses}, Last Train: {last_train_losses}, Last Val: {last_val_losses}")
+                '''
+                if self.model.train_losses == last_train_losses or self.model.val_losses == last_val_losses:
+                    self.status = "Error"
+                    self.model.RaiseException(ModelExceptions.MissingVar("Your train function must append to `self.train_losses` and `self.val_losses` for model management"))
+                    self.ErrorHandler(self.model.error)
+                    return
+                '''
+                
+                if self.model.val_losses[-1] < self.best_val_loss:
+                    self.best_val_loss = self.model.val_losses[-1]
+                    self.best_epoch = self.epoch
+                    self.best_model : torch.nn.Module = model
 
-        self.model.Save(self.best_model)
+                # Gves access to controller values (self) for optional post training operatipns
+                self.model.__after_train__(self) 
+                if self.model.error: # Error in model post training
+                    self.status = "Error"
+                    self.ErrorHandler(self.model.error, self.model.traceback)
+                    return
+                
+                self.times_per_epoch.append(time.time() - epoch_start_time)
+        except Exception as e:
+            self.status = "Error"
+            self.ErrorHandler(e, traceback.format_exc())
+            return
+
+        self.model.__save__(self.best_model)
+        if self.model.error: # Error in model saving
+            self.status = "Error"
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            return
         self.status = "Finished"
 
-    def ErrorHandler(self, error, traceback = None):
-        self.error = error
-        self.traceback = traceback
+    def ErrorHandler(self, error, traceback_str = None):
         prev_status = self.status
         self.status = "Error"
 
-        error_message = f"Initialize" if prev_status == "Initializing" else f"Epoch {self.epoch}"
-        traceback_message = f"\n{traceback}" if traceback else error
-        print(f"Error in {self.name} model {self.id} ({error_message}): {traceback_message}", color=Colors.RED)
+        error_root = f"Initialize" if prev_status == "Initializing" else f"Epoch {self.epoch}"
+        self.error_str = f"Error in {self.json_data['name']} model {self.id} ({error_root}): {error}"
+        self.error_tb = traceback_str if traceback_str else "Traceback is not available"
+        print(f"{self.error_str}\n{self.error_tb}", color=Colors.RED)
 
-    def EstTimeRemaining(self) -> float | str:
-        if self.status != "Training": return 0 if self.status == "Finished" else "Unknown"
+    def FormatTime(self, seconds: int) -> str:
+        if seconds < 0:
+            return "0 seconds"
+        
+        days = seconds // (24 * 3600)
+        seconds %= 24 * 3600
+        hours = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        seconds %= 60
+        
+        parts = []
+        if days > 0:
+            parts.append(f"{days} days")
+        if hours > 0:
+            parts.append(f"{hours} hours")
+        if minutes > 0:
+            parts.append(f"{minutes} minutes")
+        if seconds > 0 or not parts:
+            parts.append(f"{seconds:.1f} seconds")
+        
+        return ", ".join(parts)
+
+    def EstTimeRemaining(self) -> float | int:
+        if self.status != "Training": return 0
         if len(self.times_per_epoch) == 0: return 0
-        return round((np.mean(self.times_per_epoch) * self.hyperparameters.GetHyp("Epochs")) - (time.time() - self.start_time), 2)
+        return round((np.mean(self.times_per_epoch) * self.model.GetHyp("Epochs")) - (time.time() - self.start_time), 2)
 
-    def GetFrontendData(self):
+    def PresetProgressBar(self, name: str):
+        if name == "epoch":
+            return {
+                "name": "Epochs",
+                "description": "Completed training iterations out of total", 
+                "current": self.epoch,
+                "total": self.model.GetHyp("Epochs"),
+                "progress_text": f"Epoch {self.epoch} out of {self.model.GetHyp('Epochs')}",
+            }
+        elif name == "time":
+            elapsed = round(time.time() - self.start_time, 2)
+            remaining = self.EstTimeRemaining()
+            return {
+                "name": "Time",
+                "description": "Time elapsed since start of training out of total completion time", 
+                "current": elapsed,
+                "total": elapsed + remaining,
+                "progress_text": f"{self.FormatTime(elapsed)} out of {self.FormatTime(elapsed + remaining)}",
+            }
+        else:
+            self.model.RaiseException(ModelExceptions.InvalidVar(f"Invalid default progress bar type: {name}"))
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            return None
+    
+    def GetModelAttr(self, name: str, value_type: str):
+        if name.startswith("hyperparameter."):
+            name = name.replace("hyperparameter.", "")
+            value = self.model.GetHyp(name)
+            if value is None:
+                self.ErrorHandler(self.model.error, self.model.traceback)
+                return None
+            return value
+        try:
+            return getattr(self.model, name)
+        except:
+            self.model.RaiseException(ModelExceptions.MissingVar(f"Model attribute {name} does not exist attempting to get {value_type}"))
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            return None
+
+    def ConstructData(self):
+        # Construct progress bar data
+        progress_bars = []
+        for pb in self.json_data["progress_bars"]:
+            if pb["name"].startswith("controller."):
+                progress_bars.append(self.PresetProgressBar(pb["name"].replace("controller.", "")))
+            else:
+                current = self.GetModelAttr(pb["current"], f"{pb['name']} progress bar current")
+                if current is None: return None
+                total = self.GetModelAttr(pb["total"], f"{pb['name']} progress bar total")
+                if total is None: return None
+
+                if "special_type" in pb:
+                    if pb["special_type"] == "time":
+                        text_current = self.FormatTime(current)
+                        text_total = self.FormatTime(total)
+                    else:
+                        text_current = current
+                        text_total = total
+                else:
+                    text_current = current
+                    text_total = total
+
+                progress_bars.append({
+                    "name": pb["name"],
+                    "tooltip": pb["description"], # NoneType cases are handled in loader
+                    "current": current,
+                    "total": current + total,
+                    "progress_text": pb["progress_text"].replace("{0}", str(text_current)).replace("{1}", str(text_total)),
+                })
+
+        # Construct graph data (not implemented yet)
+        graphs = []
+
+        # Construct dropdown data
+        dropdowns = []
+        for dropdown in self.json_data["info_dropdowns"]:
+            data = []
+            for item in dropdown["data"]:
+                value = self.GetModelAttr(item["value"], f"{item['title']} dropdown value")
+                if value is None: return None
+                data.append({
+                    "title": item["title"],
+                    "value": str(value),
+                    "tooltip": item["description"] if "description" in item else None
+                })
+            dropdowns.append({
+                "title": dropdown["title"],
+                "tooltip": dropdown["description"],
+                "data": data,
+            })
+
         return {
-            "type": self.name,
-            "data_type": self.data_type,
-            "status": self.status,
-            "epoch": self.epoch,
-            "epochs": self.hyperparameters.GetHyp("Epochs"),
-            "training_losses": [round(loss, 8) for loss in self.model.training_loss],
-            "val_losses": [round(loss, 8) for loss in self.model.validation_loss],
-            "best_epoch": self.best_epoch,
-            "best_training_loss": round(self.best_training_loss, 8) if self.best_training_loss != float('inf') else None,
-            "best_val_loss": round(self.best_val_loss, 8) if self.best_val_loss != float('inf') else None,
-            "elapsed": round(time.time() - self.start_time, 2),
-            "estimated_time": self.EstTimeRemaining(),
-            "time_per_epoch": 0 if len(self.times_per_epoch) == 0 else np.mean(self.times_per_epoch),
-            "model_data": [model_data.to_dict() for model_data in self.model.model_data],
-            "additional_training_data": [additional_data.to_dict() for additional_data in self.model.additional_training_data],
-            "hyperparameters": self.hyperparameters.GetAllHypsAsDict()
+            "progress_bars": progress_bars,
+            "graphs": graphs,
+            "dropdowns": dropdowns
         }
+
+    def FrontendData(self):
+        if self.error_str: return None
+        try:
+            ui_data = self.ConstructData()
+            if ui_data is None: return None # Error occurred while trying to construct data
+            return {
+                "type": self.json_data["name"],
+                "data_type": self.json_data["data_type"],
+                "status": self.status,
+                "epoch": self.epoch,
+                "epochs": self.model.GetHyp("Epochs"),
+                "estimated_time": self.FormatTime(self.EstTimeRemaining()),
+                "progress_bars": ui_data["progress_bars"],
+                "graphs": ui_data["graphs"],
+                "dropdowns": ui_data["dropdowns"],
+            }
+        except Exception as e:
+            self.error_str = str(e)
+            self.error_tb = traceback.format_exc() 
+            if not self.error_tb: self.error_tb = "Traceback is not available"
+            return None

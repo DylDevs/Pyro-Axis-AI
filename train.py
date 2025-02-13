@@ -31,10 +31,9 @@ def run():
         shutil.rmtree(os.path.join(MODEL_TYPES_PATH, "__pycache__"))
 
     # Constants
-    excluded_file_names = ["modules.py", "__init__.py"]
     files = os.listdir(MODEL_TYPES_PATH)
     for filename in files:
-        if not filename.endswith(".py") or filename in excluded_file_names:
+        if not filename.endswith(".json"):
             files.remove(filename) # Remove from the local list (not directory)
             
     if len(files) == 0:
