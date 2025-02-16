@@ -236,9 +236,7 @@ export default function Index() {
         // @ts-ignore
         window.pywebview._bridge.call('pywebviewMoveWindow', [newX, newY], 'move');
       }
-    },
-    []
-  );
+  }, []);
 
   useEffect(() => {
     window.addEventListener('mousedown', handleMouseDown);
@@ -261,25 +259,6 @@ export default function Index() {
   
     return () => clearInterval(interval);
   }, [current_model_index]);
-
-  useEffect(() => {
-    if (sidebarScrollRef.current) {
-      // @ts-ignore
-      sidebarScrollRef.current.scrollTop = sidebarScrollPosition.current; // Restore scroll position
-    }
-  }, [hovered_model_index]); // Runs when hover state changes
-
-  const handleMouseEnter = useCallback((index : number) => {
-    // @ts-ignore
-    sidebarScrollPosition.current = sidebarScrollRef.current.scrollTop; // Save current scroll position
-    setHovered_model_index(index);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    // @ts-ignore
-    sidebarScrollPosition.current = sidebarScrollRef.current.scrollTop; // Save current scroll position
-    setHovered_model_index(-1);
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -511,7 +490,7 @@ export default function Index() {
     }
   }
 
-  const Sidebar = memo(() => {
+  const Sidebar = () => {
     return (
       <Card className="bg-black w-72 h-[calc(100vh-25px)] flex flex-col">
         <div className="bg-black pt-4 pb-2 flex flex-col">
@@ -532,8 +511,8 @@ export default function Index() {
             </div>
           }
           {models.map((model, index) => (
-            <div key={index} className="relative w-[calc(100%-30px)] ml-[15px] h-auto p-4 mt-2 bg-zinc-800 rounded-lg transition-all duration-300 hover:shadow-lg hover:bg-zinc-700"
-              onMouseEnter={() => handleMouseEnter(index)} onMouseLeave={handleMouseLeave} onClick={() => set_current_model_index(index)}>
+            <div key={index} className="relative w-[calc(100%-30px)] ml-[15px] h-auto p-4 mt-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"
+              onClick={() => set_current_model_index(index)}>
               <div className="items-center gap-3 flex">
                 {model.data_type === "image" ? (
                   <Image width={24} height={24} />
@@ -542,8 +521,7 @@ export default function Index() {
                 )}
                 <p className="text-sm font-semibold">{model.type}</p>
               </div>
-              <div
-                className={`mt-2 overflow-hidden text-xs text-gray-400 transition-all duration-300 ${hovered_model_index === index ? "max-h-32 scale-up" : "max-h-4"}`}>
+              <div className="mt-2 overflow-hidden text-xs text-gray-400">
                 <div>Status: {model.status}</div>
                 <div>Progress: {(model.epoch / model.epochs * 100).toFixed(1)}%</div>
               </div>
@@ -561,116 +539,22 @@ export default function Index() {
         </div>
       </Card>
     );
-  });
+  };
 
-
-  const Home = memo(() => {
+  const Home = () => {
     return (
       <Card className="flex flex-col gap-2 items-center justify-center ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black">
         <h1 className="text-2xl font-bold">{greeting}</h1>
         <p className="text-zinc-500 text-md">Welcome to the training dashboard!</p>
       </Card>
     );
-  });
-
-  const LossGraph = memo(({ train_losses, val_losses }: { train_losses: number[]; val_losses: number[] }) => {
-    const t_loss_color = "#ff0000";
-    const v_loss_color = "#00ff00";
+  };
   
-    const chartConfig = {
-      desktop: {
-        label: "Training Loss",
-        color: t_loss_color,
-      },
-      mobile: {
-        label: "Validation Loss",
-        color: v_loss_color,
-      },
-    } satisfies ChartConfig;
-  
-    const data = train_losses.map((train_loss, index) => ({
-      "Epoch": index + 1,
-      "Training Loss": train_loss,
-      "Validation Loss": val_losses[index],
-    }));
-  
-    return (
-      <Card className="w-[calc(100vw-370px)] h-[560px]">
-        <ChartContainer config={chartConfig} className="h-[542px] w-[calc(100vw-380px)] mt-2">
-          <AreaChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={true} />
-            <XAxis 
-              dataKey="Epoch" 
-              tickLine={true} 
-              axisLine={false} 
-              tickCount={5}
-              label={{ value: "Epoch", position: "bottom", offset: -5 }}
-            />
-            <YAxis 
-              tickLine={true} 
-              axisLine={false} 
-              tickCount={5}
-              tickFormatter={(value) => value.toFixed(3)}
-              label={{ value: "Loss", angle: -90, position: "insideLeft", offset: 10 }}
-            />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Legend layout="horizontal" verticalAlign="bottom" align="left" wrapperStyle={{ marginLeft: '60px', marginBottom: '5px' }}/>
-            <defs>
-              <linearGradient id="fillTrainingLoss" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={t_loss_color} stopOpacity={0.8} />
-                <stop offset="60%" stopColor={t_loss_color} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={t_loss_color} stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id="fillValidationLoss" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={v_loss_color} stopOpacity={0.8} />
-                <stop offset="60%" stopColor={v_loss_color} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={v_loss_color} stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <Area 
-              dataKey="Training Loss" 
-              type="natural" 
-              fill="url(#fillTrainingLoss)" 
-              fillOpacity={0.4} 
-              stroke={t_loss_color} 
-              stackId="a" 
-            />
-            <Area 
-              dataKey="Validation Loss" 
-              type="natural" 
-              fill="url(#fillValidationLoss)" 
-              fillOpacity={0.4} 
-              stroke={v_loss_color} 
-              stackId="a" 
-            />
-          </AreaChart>
-        </ChartContainer>
-      </Card>
-    );
-  });
-  
-  const ModelVisualizer = memo(({ model }: { model: TraingModel }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const scrollPositionRef = useRef<number>(0);
-
-    // Store the scroll position before the component updates
-    useEffect(() => {
-      const container = containerRef.current;
-      if (container) {
-        scrollPositionRef.current = container.scrollTop;
-      }
-    }, [model]);
-
-    // Restore the scroll position after the component updates
-    useEffect(() => {
-      const container = containerRef.current;
-      if (container) {
-        container.scrollTop = scrollPositionRef.current;
-      }
-    }, [model]);
+  const ModelVisualizer = () => {
+    const model = models[current_model_index];
 
     return (
-      <Card className="flex flex-col ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black overflow-y-auto" ref={containerRef}>
+      <Card className="flex flex-col ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black overflow-y-auto">
         <div className="m-4 overflow-y-auto overflow-x-hidden">
           <h1 className="text-3xl font-bold mb-4">{model.type}</h1>
           <p className="text-sm">{model.status} • {model.estimated_time} remaining</p>
@@ -717,7 +601,7 @@ export default function Index() {
         </div>
       </Card>
     )
-  });
+  };
 
   return (
     <div className="flex flex-row">
@@ -727,7 +611,7 @@ export default function Index() {
       ) : (
         <>
           <Sidebar />
-          {current_model_index === -1 ? <Home /> : <ModelVisualizer model={models[current_model_index]} />}
+          {current_model_index === -1 ? <Home /> : <ModelVisualizer/>}
           {creating_model && <CreateNewModel />}
         </>
       )}
