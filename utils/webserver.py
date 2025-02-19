@@ -108,7 +108,6 @@ def status():
             training_controllers.remove(training_controller)
             return {"status": "error", "error": training_controller.error_str, "traceback": training_controller.error_tb}
         data.append(training_controller.FrontendData())
-    print(f"Status Data: {data}")
     
     return {"status": "ok", "data": data}
 

@@ -22,7 +22,7 @@
         },
         {
             "name": "Model Save Path",
-            "default": "/models/gpt/model.pt",
+            "default": "gpt",
             "special_type": "path",
             "description": "Path to save the model to"
         },
@@ -201,7 +201,7 @@
     "after_train_function": "AfterTrain",
     "progress_bars": [
         {
-            "name": "controller.epoch",
+            "title": "controller.epoch",
             "description": "",
             "type": "number",
             "current": "",
@@ -209,7 +209,7 @@
             "progress_text": ""
         },
         {
-            "name": "controller.time",
+            "title": "controller.time",
             "description": "",
             "type": "time",
             "current": "",
@@ -217,12 +217,25 @@
             "progress_text": ""
         },
         {
-            "name": "Patience",
+            "title": "Patience",
             "description": "Shows how many epochs the model has gone since the best epoch and how close it is to the patience value",
             "type": "number",
             "current": "epochs_until_patience",
             "total": "hyperparameter.Patience",
             "progress_text": "{0} epochs out of {1} until early stop"
+        }
+    ],
+    "graphs": [
+        {
+            "title": "controller.loss",
+            "description": "",
+            "data": [
+                {
+                    "title": "",
+                    "color": "#ffffff",
+                    "values": ""
+                }
+            ]
         }
     ],
     "info_dropdowns": [

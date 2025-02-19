@@ -33,14 +33,37 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "name": { "type": "string" },
+                    "title": { "type": "string" },
                     "description": { "type": "string" },
                     "type": { "type": "string", "enum": ["number", "time"] },
                     "current": { "type": "string" },
                     "total": { "type": "string" },
                     "progress_text": { "type": "string" }
                 },
-                "required": ["name", "type", "current", "total", "progress_text"]
+                "required": ["title", "type", "current", "total", "progress_text"]
+            }
+        },
+        "graphs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "description": { "type": "string" },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "title": { "type": "string" },
+                                "color": { "type": "string", "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"},
+                                "values": { "type": "string" }
+                            },
+                            "required": ["title", "color", "values"]
+                        }
+                    }
+                },
+                "required": ["title", "data"]
             }
         },
         "info_dropdowns": {

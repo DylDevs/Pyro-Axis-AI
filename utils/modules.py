@@ -11,12 +11,11 @@ import time
 import sys
 import os
 
-# TODO: Test and add QOL features as needed
-
 MODEL_TYPES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model_types")
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
 SUPPORTED_CONTROLLER_PBS = ["epoch", "time"]
+SUPPORTED_CONTROLLER_GRAPHS = ["loss"]
 
 class LoadExceptions:
     class MissingFile(Exception): pass
@@ -196,10 +195,10 @@ class ModelTypeLoader:
             raise LoadExceptions.TypeException(f"Required hyperparameter 'Epochs' must have an incriment of 1 (Check the in-app documentation for more info)")
 
         for var in json_data["progress_bars"]:
-            if var["name"].startswith("controller."):
+            if var["title"].startswith("controller."):
                 found = False
                 for pb in SUPPORTED_CONTROLLER_PBS:
-                    if var["name"] == f"controller.{pb}":
+                    if var["title"] == f"controller.{pb}":
                         found = True
                         break
                 if not found:
@@ -215,7 +214,22 @@ class ModelTypeLoader:
             if "{0}" not in var["progress_text"] or "{1}" not in var["progress_text"]:
                 raise LoadExceptions.TypeException( f"Progress bar '{name}' progress_text must contain '{{0}}' and '{{1}}' (Check the in-app documentation for more info)")
 
-        # TODO: for var in json_data["graphs"]:
+        for var in json_data["graphs"]:
+            if var["title"].startswith("controller."):
+                found = False
+                for graph in SUPPORTED_CONTROLLER_GRAPHS:
+                    if var["title"] == f"controller.{graph}":
+                        found = True
+                        break
+                if not found:
+                    raise LoadExceptions.TypeException(f"Graph '{var['title']}' is attempting to use a non-supported controller graph (Check the in-app documentation for more info)")
+                else:
+                    continue # Skip the rest of the checks as this is a default graph
+
+            if "description" not in var:
+                var["description"] = None
+
+            # 'values' will be checked each time the UI is updated as they may not exist yet
 
         for var in json_data["info_dropdowns"]:
             for data in var["data"]:
@@ -240,14 +254,15 @@ class Colors:
     DARK_GREY = "\033[90m"
     NORMAL = "\033[0m"
 
-def timestamp():
-    return Colors.DARK_GREY + f"[{datetime.datetime.now().strftime('%H:%M:%S')}] " + Colors.NORMAL
+def timestamp(caller = None):
+    caller = f" | {caller}.py" if caller != None else ""
+    return Colors.DARK_GREY + f"[{datetime.datetime.now().strftime('%H:%M:%S')}{caller}] " + Colors.NORMAL
 
 last_print_type = "normal"
 def print(message: str, color: Colors = Colors.NORMAL, end: str = "\n", reprint : bool = False, show_timestamp: bool = True):
     global last_print_type
     if show_timestamp:
-        start = timestamp()
+        start = f"{timestamp(os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0])}"
     else:
         start = ""
     if not reprint:
@@ -273,6 +288,7 @@ class ModelTemplate:
         Initialize a ModelTemplate instance.
         """
         self.json_data = json_data
+        self.model : torch.nn.Module = None
 
         # Get the initialize, train, and save functions from their name
         self.initialize_function = getattr(self, json_data["initialize_function"])
@@ -394,31 +410,20 @@ class TrainingController:
     def _train_thread(self):
         try:
             for epoch in range(self.model.GetHyp("Epochs")):
-                last_train_losses = self.model.train_losses
-                last_val_losses = self.model.val_losses
                 epoch_start_time = time.time()
                 self.status = "Initializing" if epoch == 0 else "Training"
                 self.epoch = epoch
 
-                model = self.model.__train__()
+                self.model.__train__()
                 if self.model.error: # Error in model training
                     self.status = "Error"
                     self.ErrorHandler(self.model.error, self.model.traceback)
                     return
                 
-                print(f"Model Train: {self.model.train_losses}, Model Val: {self.model.val_losses}, Last Train: {last_train_losses}, Last Val: {last_val_losses}")
-                '''
-                if self.model.train_losses == last_train_losses or self.model.val_losses == last_val_losses:
-                    self.status = "Error"
-                    self.model.RaiseException(ModelExceptions.MissingVar("Your train function must append to `self.train_losses` and `self.val_losses` for model management"))
-                    self.ErrorHandler(self.model.error)
-                    return
-                '''
-                
-                if self.model.val_losses[-1] < self.best_val_loss:
+                if self.model.val_losses[-1] < self.best_val_loss or self.best_model is None:
                     self.best_val_loss = self.model.val_losses[-1]
                     self.best_epoch = self.epoch
-                    self.best_model : torch.nn.Module = model
+                    self.best_model : torch.nn.Module = self.model.model
 
                 # Gves access to controller values (self) for optional post training operatipns
                 self.model.__after_train__(self) 
@@ -450,7 +455,7 @@ class TrainingController:
         print(f"{self.error_str}\n{self.error_tb}", color=Colors.RED)
 
     def FormatTime(self, seconds: int) -> str:
-        if seconds < 0:
+        if seconds <= 0:
             return "0 seconds"
         
         days = seconds // (24 * 3600)
@@ -462,13 +467,13 @@ class TrainingController:
         
         parts = []
         if days > 0:
-            parts.append(f"{days} days")
+            parts.append(f"{days:.0f} days")
         if hours > 0:
-            parts.append(f"{hours} hours")
+            parts.append(f"{days:.0f} hours")
         if minutes > 0:
-            parts.append(f"{minutes} minutes")
+            parts.append(f"{minutes:.0f} minutes")
         if seconds > 0 or not parts:
-            parts.append(f"{seconds:.1f} seconds")
+            parts.append(f"{seconds:.0f} seconds")
         
         return ", ".join(parts)
 
@@ -480,7 +485,7 @@ class TrainingController:
     def PresetProgressBar(self, name: str):
         if name == "epoch":
             return {
-                "name": "Epochs",
+                "title": "Epochs",
                 "description": "Completed training iterations out of total", 
                 "current": self.epoch,
                 "total": self.model.GetHyp("Epochs"),
@@ -490,7 +495,7 @@ class TrainingController:
             elapsed = round(time.time() - self.start_time, 2)
             remaining = self.EstTimeRemaining()
             return {
-                "name": "Time",
+                "title": "Time",
                 "description": "Time elapsed since start of training out of total completion time", 
                 "current": elapsed,
                 "total": elapsed + remaining,
@@ -498,6 +503,29 @@ class TrainingController:
             }
         else:
             self.model.RaiseException(ModelExceptions.InvalidVar(f"Invalid default progress bar type: {name}"))
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            return None
+
+    def PresetGraph(self, name: str):
+        if name == "loss":
+            return {
+                "title": "Train & Val Loss",
+                "tooltip": "Loss of the model on the validation set",
+                "lines": [
+                    {
+                        "title": "Train Loss",
+                        "color": "#ff0000",
+                        "values": self.model.train_losses,
+                    },
+                    {
+                        "title": "Val Loss",
+                        "color": "#00ff00",
+                        "values": self.model.val_losses,
+                    },
+                ],
+            }
+        else:
+            self.model.RaiseException(ModelExceptions.InvalidVar(f"Invalid default graph type: {name}"))
             self.ErrorHandler(self.model.error, self.model.traceback)
             return None
     
@@ -517,69 +545,96 @@ class TrainingController:
             return None
 
     def ConstructData(self):
-        # Construct progress bar data
-        progress_bars = []
-        for pb in self.json_data["progress_bars"]:
-            if pb["name"].startswith("controller."):
-                progress_bars.append(self.PresetProgressBar(pb["name"].replace("controller.", "")))
-            else:
-                current = self.GetModelAttr(pb["current"], f"{pb['name']} progress bar current")
-                if current is None: return None
-                total = self.GetModelAttr(pb["total"], f"{pb['name']} progress bar total")
-                if total is None: return None
+        try:
+            # Construct progress bar data
+            progress_bars = []
+            for pb in self.json_data["progress_bars"]:
+                if pb["title"].startswith("controller."):
+                    bar = self.PresetProgressBar(pb["title"].replace("controller.", ""))
+                    if bar is None: return None
+                    progress_bars.append(bar)
+                else:
+                    current = self.GetModelAttr(pb["current"], f"{pb['title']} progress bar current")
+                    if current is None: return None
+                    total = self.GetModelAttr(pb["total"], f"{pb['title']} progress bar total")
+                    if total is None: return None
 
-                if "special_type" in pb:
-                    if pb["special_type"] == "time":
-                        text_current = self.FormatTime(current)
-                        text_total = self.FormatTime(total)
+                    if "special_type" in pb:
+                        if pb["special_type"] == "time":
+                            text_current = self.FormatTime(current)
+                            text_total = self.FormatTime(total)
+                        else:
+                            text_current = current
+                            text_total = total
                     else:
                         text_current = current
                         text_total = total
+
+                    progress_bars.append({
+                        "title": pb["title"],
+                        "tooltip": pb["description"], # NoneType cases are handled in loader
+                        "current": current,
+                        "total": current + total,
+                        "progress_text": pb["progress_text"].replace("{0}", str(text_current)).replace("{1}", str(text_total)),
+                    })
+
+            # Construct graph data (not implemented yet)
+            graphs = []
+            for graph in self.json_data["graphs"]:
+                if graph["title"].startswith("controller."):
+                    graph = self.PresetGraph(graph["title"].replace("controller.", ""))
+                    if graph is None: return None
+                    graphs.append(graph)
                 else:
-                    text_current = current
-                    text_total = total
+                    lines = []
+                    for line in graph["data"]:
+                        values = self.GetModelAttr(line["values"], f"{line['title']} graph values")
+                        if values is None: return None
+                        lines.append({
+                            "title": line["title"],
+                            "color": line["color"],
+                            "values": values,
+                        })
+                    graphs.append({
+                        "title": graph["title"],
+                        "tooltip": graph["description"],
+                        "lines": lines,
+                    })
 
-                progress_bars.append({
-                    "name": pb["name"],
-                    "tooltip": pb["description"], # NoneType cases are handled in loader
-                    "current": current,
-                    "total": current + total,
-                    "progress_text": pb["progress_text"].replace("{0}", str(text_current)).replace("{1}", str(text_total)),
+            # Construct dropdown data
+            dropdowns = []
+            for dropdown in self.json_data["info_dropdowns"]:
+                data = []
+                for item in dropdown["data"]:
+                    value = self.GetModelAttr(item["value"], f"{item['title']} dropdown value")
+                    if value is None: return None
+                    data.append({
+                        "title": item["title"],
+                        "value": str(value),
+                        "tooltip": item["description"] if "description" in item else None
+                    })
+                dropdowns.append({
+                    "title": dropdown["title"],
+                    "tooltip": dropdown["description"],
+                    "data": data,
                 })
 
-        # Construct graph data (not implemented yet)
-        graphs = []
-
-        # Construct dropdown data
-        dropdowns = []
-        for dropdown in self.json_data["info_dropdowns"]:
-            data = []
-            for item in dropdown["data"]:
-                value = self.GetModelAttr(item["value"], f"{item['title']} dropdown value")
-                if value is None: return None
-                data.append({
-                    "title": item["title"],
-                    "value": str(value),
-                    "tooltip": item["description"] if "description" in item else None
-                })
-            dropdowns.append({
-                "title": dropdown["title"],
-                "tooltip": dropdown["description"],
-                "data": data,
-            })
-
-        return {
-            "progress_bars": progress_bars,
-            "graphs": graphs,
-            "dropdowns": dropdowns
-        }
+            return {
+                "progress_bars": progress_bars,
+                "graphs": graphs,
+                "dropdowns": dropdowns
+            }
+        except Exception as e:
+            self.model.RaiseException(e)
+            self.ErrorHandler(self.model.error, self.model.traceback)
+            raise e
 
     def FrontendData(self):
         if self.error_str: return None
         try:
             ui_data = self.ConstructData()
             if ui_data is None: return None # Error occurred while trying to construct data
-            return {
+            data = {
                 "type": self.json_data["name"],
                 "data_type": self.json_data["data_type"],
                 "status": self.status,
@@ -590,8 +645,23 @@ class TrainingController:
                 "graphs": ui_data["graphs"],
                 "dropdowns": ui_data["dropdowns"],
             }
+            print(data)
+            return data
         except Exception as e:
             self.error_str = str(e)
-            self.error_tb = traceback.format_exc() 
+            self.error_tb = traceback.format_exc()
             if not self.error_tb: self.error_tb = "Traceback is not available"
             return None
+
+'''
+{
+           "title": "Learning Rate",
+           "description": "Learning rate over time",
+           "data": [
+               {
+                   "title": "Learning Rate",
+                   "color": "#0000ff",
+                   "values": "learning_rates"
+               }
+           ]
+        }'''

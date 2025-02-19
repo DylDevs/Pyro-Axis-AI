@@ -18,17 +18,16 @@ import { Loading } from "@/components/loading";
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card";
 import ErrorPopup from "@/components/error_popup";
-import { set } from "date-fns";
 
 class ProgressBar {
-  name: string;
+  title: string;
   tooltip: string | null;
   current: number;
   total: number;
   progress_text: string;
 
   constructor(data: any) {
-    this.name = data["name"];
+    this.title = data["n\title"];
     this.tooltip = data["tooltip"];
     this.current = data["current"];
     this.total = data["total"];
@@ -36,8 +35,30 @@ class ProgressBar {
   }
 }
 
+class GraphData {
+  title: string;
+  color: string;
+  values: number[];
+
+  constructor(data: any) {
+    this.title = data["title"];
+    this.color = data["color"];
+    this.values = data["values"];
+  }
+}
 class Graph {
-  // TODO: implement
+  title: string;
+  tooltip: string | null;
+  lines: GraphData[];
+
+  constructor(data: any) {
+    this.title = data["title"];
+    this.tooltip = data["tooltip"];
+    this.lines = [];
+    for (let i = 0; i < data["lines"].length; i++) {
+      this.lines.push(new GraphData(data["lines"][i]))
+    }
+  }
 }
 
 class DropdownData {
@@ -74,7 +95,7 @@ class TraingModel {
   epochs: number;
   estimated_time: number | string;
   progress_bars: ProgressBar[];
-  graphs: any;
+  graphs: Graph[];
   dropdowns: Dropdown[];
 
   constructor(data: any) {
@@ -90,7 +111,9 @@ class TraingModel {
     for (let i = 0; i < data["progress_bars"].length; i++) {
       this.progress_bars.push(new ProgressBar(data["progress_bars"][i]))
     }
-    // TODO: implement graph
+    for (let i = 0; i < data["graphs"].length; i++) {
+      this.graphs.push(new Graph(data["graphs"][i]))
+    }
     for (let i = 0; i < data["dropdowns"].length; i++) {
       this.dropdowns.push(new Dropdown(data["dropdowns"][i]))
     }
@@ -186,17 +209,11 @@ export default function Index() {
   const { push } = useRouter();
   const [greeting, setGreeting] = useState("Loading...");
   const [showLoading, setShowLoading] = useState(false);
-
   const [models, setModels] = useState<TraingModel[]>([])
-  const [hovered_model_index, setHovered_model_index] = useState(-1);
   const [current_model_index, set_current_model_index] = useState(-1);
   const [error_popup_data, setErrorPopupData] = useState<ErrorPopupData | null>(null);
-
   const sidebarScrollRef = useRef(null);
-  const sidebarScrollPosition = useRef(0);
-
   const [creating_model, setCreatingModel] = useState(false);
-
   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
   const [windowPosition, setWindowPosition] = useState({ x: 0, y: 0 });
   const [isMouseInDragArea, setIsMouseInDragArea] = useState(false);
@@ -511,7 +528,7 @@ export default function Index() {
             </div>
           }
           {models.map((model, index) => (
-            <div key={index} className="relative w-[calc(100%-30px)] ml-[15px] h-auto p-4 mt-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"
+            <div key={index} className="relative w-[calc(100%-30px)] ml-[15px] h-auto p-4 mt-2 bg-zinc-900 rounded-lg hover:bg-zinc-800"
               onClick={() => set_current_model_index(index)}>
               <div className="items-center gap-3 flex">
                 {model.data_type === "image" ? (
@@ -553,54 +570,135 @@ export default function Index() {
   const ModelVisualizer = () => {
     const model = models[current_model_index];
 
+    const chart_configs : ChartConfig[] = []
+    for (let i = 0; i < model.graphs.length; i++) {
+      const chart_config_i = {} satisfies ChartConfig
+      for (let j = 0; j < model.graphs[i].lines.length; j++) {
+        // @ts-ignore
+        chart_config_i[j] = { label: model.graphs[i].lines[j].title, color: model.graphs[i].lines[j].color }
+      }
+      chart_configs.push(chart_config_i)
+    }
+
+    const graphs_data : any = []
+    for (let i = 0; i < model.graphs.length; i++) {
+      const graph_data = []
+      for (let j = 0; j < model.graphs[i].lines[0].values.length; j++) {
+        const values = {"Epoch": j}
+        for (let k = 0; k < model.graphs[i].lines.length; k++) {
+          // @ts-ignore
+          values[model.graphs[i].lines[k].title] = model.graphs[i].lines[k].values[j]
+        }
+        graph_data.push(values)
+      }
+      graphs_data.push(graph_data)
+    }
+
     return (
       <Card className="flex flex-col ml-3 h-[calc(100vh-25px)] w-[calc(100vw-324px)] bg-black overflow-y-auto">
         <div className="m-4 overflow-y-auto overflow-x-hidden">
           <h1 className="text-3xl font-bold mb-4">{model.type}</h1>
-          <p className="text-sm">{model.status} • {model.estimated_time} remaining</p>
-          {model.status === "Initializing" && (
+          <p className="text-sm">
+            {model.status} • {model.estimated_time} remaining
+          </p>
+    
+          {error_popup_data ? (
+            <div className="flex flex-col">
+              <p className="text-sm text-zinc-500 mt-3">{error_popup_data.error}</p>
+              <div className="p-3 rounded-md w-full overflow-auto bg-zinc-800 mt-2">
+                <code>
+                  {error_popup_data.traceback.split("\n").map((line, index) => <p key={index}>{line}</p>)}
+                </code>
+              </div>
+            </div>
+          ) : model.status === "Initializing" ? (
             <div className="flex items-center justify-center w-full h-full">
               <p className="text-sm text-zinc-500">Model is initializing, please wait...</p>
             </div>
-          )}
-          {model.status === "Training" && (
+          ) : model.status === "Training" ? (
             <div>
               {model.progress_bars.map((progress_bar, index) => (
                 <div className="flex flex-col gap-3 mt-8" key={index}>
-                  <h2 className="text-xl font-bold mb-1">{progress_bar.name}</h2>
-                  <Progress value={ConvertToProgressValue(progress_bar.current, progress_bar.total)} className="h-2 w-[calc(100vw-380px)]" />
+                  <h2 className="text-xl font-bold mb-1">{progress_bar.title}</h2>
+                  <Progress
+                    value={ConvertToProgressValue(progress_bar.current, progress_bar.total)}
+                    className="h-2 w-[calc(100vw-380px)]"
+                  />
                   <p>{progress_bar.progress_text}</p>
                 </div>
               ))}
+    
               <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] my-8" />
-              {/* TODO: Add graphs */}
+              {model.graphs.map((graph, index) => (
+                <Card className="w-[calc(100vw-370px)] h-[560px]">
+                  <ChartContainer config={chart_configs[index]} className="h-[542px] w-[calc(100vw-380px)] mt-2">
+                    <AreaChart accessibilityLayer data={graphs_data[index]}>
+                      <CartesianGrid vertical={true} />
+                      <XAxis 
+                        dataKey="Epoch" 
+                        tickLine={true} 
+                        axisLine={false} 
+                        tickCount={5}
+                        label={{ value: "Epoch", position: "bottom", offset: -5 }}
+                      />
+                      <YAxis 
+                        tickLine={true} 
+                        axisLine={false} 
+                        tickCount={5}
+                        label={{ value: "Loss", angle: -90, position: "insideLeft", offset: 10 }}
+                      />
+                      <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                      <Legend layout="horizontal" verticalAlign="bottom" align="left" wrapperStyle={{ marginLeft: '60px', marginBottom: '5px' }}/>
+                      <defs>
+                        {graph.lines.map((line, index) => (
+                          <linearGradient id={`fill${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={line.color} stopOpacity={0.8} />
+                            <stop offset="60%" stopColor={line.color} stopOpacity={0.3} />
+                            <stop offset="100%" stopColor={line.color} stopOpacity={0.05} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      {graph.lines.map((line, index) => (
+                        <Area 
+                          dataKey={line.title} 
+                          type="natural" 
+                          fill={`url(#fill${index})`}
+                          fillOpacity={0.4} 
+                          stroke={line.color} 
+                          stackId="a" 
+                        />
+                      ))}
+                    </AreaChart>
+                  </ChartContainer>
+                </Card>
+              ))}
               <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] my-8" />
+    
               <h1 className="text-2xl font-bold mb-4 ml-1">Additional information:</h1>
               <div className="w-[calc(100%-20px)] ml-[5px]">
-              {model.dropdowns.map((dropdown, index) => (
-                <Accordion type="single" collapsible>
-                  <AccordionItem value={`item-${index}`}>
-                    <AccordionTrigger className="text-lg font-bold">{dropdown.title}</AccordionTrigger>
-                    <AccordionContent>
-                      {/* @ts-ignore */}
-                      {Object.entries(dropdown.data).map(([_, data]: [string, { name: string; value: boolean | string | number }], index) => (
-                        <div key={index} className="flex flex-row w-full justify-between mb-6">
-                          <p className="text-md font-bold">{data.name}</p>
-                          <p className="text-md mr-4">
-                            {typeof data.value === "boolean" ? data.value ? "Yes" : "No" : data.value}
-                          </p>
-                        </div>
-                      ))}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
+                {model.dropdowns.map((dropdown, index) => (
+                  <Accordion type="single" collapsible key={index}>
+                    <AccordionItem value={`item-${index}`}>
+                      <AccordionTrigger className="text-lg font-bold">{dropdown.title}</AccordionTrigger>
+                      <AccordionContent>
+                        {Object.entries(dropdown.data).map(([key, data], dataIndex) => (
+                          <div key={dataIndex} className="flex flex-row w-full justify-between mb-6">
+                            <p className="text-md font-bold">{data.title}</p>
+                            <p className="text-md mr-4 text-zinc-500">
+                              {typeof data.value === "boolean" ? (data.value ? "Yes" : "No") : data.value}
+                            </p>
+                          </div>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </Card>
-    )
+    );    
   };
 
   return (

@@ -77,6 +77,7 @@ class Model(ModelTemplate):
         self.scaler_str = ""
         self.warmup_scheduler_str = ""
         self.scheduler_str = ""
+        self.learning_rates = []
 
     def CreateTrainDataLoader(self):
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.GetHyp("Batch Size"), shuffle=self.GetHyp("Shuffle Train"), num_workers=self.GetHyp("Num Workers"), pin_memory=self.GetHyp("Pin Memory"), drop_last=self.GetHyp("Drop Last"), collate_fn=self.collate_fn)
@@ -312,9 +313,9 @@ class Model(ModelTemplate):
         combined_loss = (self.GetHyp("Combined Loss Ratio") * training_loss) + ((1 - self.GetHyp("Combined Loss Ratio")) * validation_loss)
         self.scheduler.step(combined_loss)
 
-        print(f"Training Loss: {training_loss:.4f}, Validation Loss: {validation_loss:.4f}")
         self.train_losses.append(training_loss)
         self.val_losses.append(validation_loss)
+        self.learning_rates.append(self.optimizer.param_groups[0]['lr'])
         
     def AfterTrain(self, controller : TrainingController):
         torch.cuda.empty_cache()
@@ -329,45 +330,10 @@ class Model(ModelTemplate):
         """This function saves the model. (Called by the training controller)"""
         torch.cuda.empty_cache()
 
-        model.eval()
-        total_train = 0
-        correct_train = 0
-        with torch.no_grad():
-            for data in self.train_dataloader:
-                inputs, labels = data[0].to(self.device, non_blocking=True), data[1].to(self.device, non_blocking=True)
-                outputs = model(inputs)
-                _, predicted = torch.max(outputs.data, 1)
-                total_train += labels.size(0)
-                correct_train += (predicted == labels).sum().item()
-        training_dataset_accuracy = str(round(100 * (correct_train / total_train), 2)) + "%"
-
-        torch.cuda.empty_cache()
-
-        total_val = 0
-        correct_val = 0
-        with torch.no_grad():
-            for data in self.val_dataloader:
-                inputs, labels = data[0].to(self.device, non_blocking=True), data[1].to(self.device, non_blocking=True)
-                outputs = model(inputs)
-                _, predicted = torch.max(outputs.data, 1)
-                total_val += labels.size(0)
-                correct_val += (predicted == labels).sum().item()
-        validation_dataset_accuracy = str(round(100 * (correct_val / total_val), 2)) + "%"
-
-        torch.cuda.empty_cache()
-
-        # Metadata as a dictionary for JSON format
-        model_metadata = {
-            "training_loss": self.train_losses[-1],
-            "validation_loss": self.val_losses[-1],
-            "training_dataset_accuracy": training_dataset_accuracy,
-            "validation_dataset_accuracy": validation_dataset_accuracy
-        }
-
-        metadata = {"metadata": json.dumps(model_metadata).encode("utf-8")}
         model_name = f"{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.pt"
 
-        if not os.path.exists(self.GetHyp("model_path")):
-            os.makedirs(self.GetHyp("model_path"))
-        torch.jit.save(torch.jit.script(model), os.path.join(self.GetHyp("Model Path"), model_name), _extra_files=metadata)
-        print(f"Saved {model_name} successfully.")
+        path = os.path.join(self.models_path, self.GetHyp("Model Save Path"))
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        torch.jit.save(torch.jit.script(model), os.path.join(path, model_name))
