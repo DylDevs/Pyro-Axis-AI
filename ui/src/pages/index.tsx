@@ -27,7 +27,7 @@ class ProgressBar {
   progress_text: string;
 
   constructor(data: any) {
-    this.title = data["n\title"];
+    this.title = data["title"];
     this.tooltip = data["tooltip"];
     this.current = data["current"];
     this.total = data["total"];
@@ -337,7 +337,6 @@ export default function Index() {
     }
   }
 
-
   function CreateNewModel() {
     const [modelsData, setModelsData] = useState<ModelType[] | null>(null);
     const [completed_hyps, setCompletedHyps] = useState<CompletedHyperparameter[]>([]);
@@ -628,13 +627,14 @@ export default function Index() {
                 </div>
               ))}
     
-              <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] my-8" />
+              <Separator orientation="horizontal" className="bg-zinc-600 w-[calc(100%-30px)] ml-[15px] mt-8" />
               {model.graphs.map((graph, index) => (
-                <Card className="w-[calc(100vw-370px)] h-[560px]">
-                  <ChartContainer config={chart_configs[index]} className="h-[542px] w-[calc(100vw-380px)] mt-2">
+                <Card className="w-[calc(100vw-370px)] h-[640px] mt-8">
+                  <h1 className="text-center mt-1 text-lg text-zinc-400">{graph.title}</h1>
+                  <ChartContainer config={chart_configs[index]} className="h-[600px] w-[calc(100vw-380px)] mt-2">
                     <AreaChart accessibilityLayer data={graphs_data[index]}>
                       <CartesianGrid vertical={true} />
-                      <XAxis 
+                      <XAxis  
                         dataKey="Epoch" 
                         tickLine={true} 
                         axisLine={false} 
@@ -651,7 +651,7 @@ export default function Index() {
                       <Legend layout="horizontal" verticalAlign="bottom" align="left" wrapperStyle={{ marginLeft: '60px', marginBottom: '5px' }}/>
                       <defs>
                         {graph.lines.map((line, index) => (
-                          <linearGradient id={`fill${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <linearGradient key={`fill${index}`} id={`fill${index}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={line.color} stopOpacity={0.8} />
                             <stop offset="60%" stopColor={line.color} stopOpacity={0.3} />
                             <stop offset="100%" stopColor={line.color} stopOpacity={0.05} />
@@ -663,7 +663,6 @@ export default function Index() {
                           dataKey={line.title} 
                           type="natural" 
                           fill={`url(#fill${index})`}
-                          fillOpacity={0.4} 
                           stroke={line.color} 
                           stackId="a" 
                         />

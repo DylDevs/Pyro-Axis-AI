@@ -236,7 +236,18 @@
                     "values": ""
                 }
             ]
-        }
+        },
+        {
+            "title": "Learning Rate",
+            "description": "Learning rate over time",
+            "data": [
+                {
+                    "title": "Learning Rate",
+                    "color": "#0000ff",
+                    "values": "learning_rates"
+                }
+            ]
+         }
     ],
     "info_dropdowns": [
         {
