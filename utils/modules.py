@@ -50,6 +50,7 @@ class ModelTypeLoader:
                 self.model_types.append(model)
             except Exception as e:
                 try:
+                    # Load name from JSON file if available
                     data = json.load(open(os.path.join(MODEL_TYPES_PATH, filename), "r"))
                     title = data["name"]
                 except:
@@ -64,6 +65,7 @@ class ModelTypeLoader:
         empty_line()
 
     def _listener_thread(self):
+        '''Listens for changes in model definitions file to reload model type'''
         while True:
             edited = False
             self.updating = True
@@ -247,6 +249,7 @@ class ModelTypeLoader:
         return self.model_types
 
 class Colors:
+    '''Colors for printing in the console'''
     RED = "\033[91m"
     YELLOW = "\033[93m"
     GREEN = "\033[92m"
@@ -257,9 +260,11 @@ class Colors:
 def timestamp(caller = None):
     caller = f" | {caller}.py" if caller != None else ""
     return Colors.DARK_GREY + f"[{datetime.datetime.now().strftime('%H:%M:%S')}{caller}] " + Colors.NORMAL
+    # [00:00:00 | file.py] 
 
 last_print_type = "normal"
 def print(message: str, color: Colors = Colors.NORMAL, end: str = "\n", reprint : bool = False, show_timestamp: bool = True):
+    '''Custom print function for logging purposes'''
     global last_print_type
     if show_timestamp:
         start = f"{timestamp(os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0])}"
@@ -276,16 +281,17 @@ def print(message: str, color: Colors = Colors.NORMAL, end: str = "\n", reprint 
         last_print_type = "reprint"
 
 def empty_line():
+    '''Empty line in the console'''
     print("", show_timestamp=False)
     
 def reset_reprint():
-    # Allows for reprints in a row
+    '''Allows for reprints in a row'''
     print("", end="", show_timestamp=False)
 
 class ModelTemplate:
     def __init__(self, json_data: dict) -> None:
         """
-        Initialize a ModelTemplate instance.
+        Parent class for all Python model definitions
         """
         self.json_data = json_data
         self.model : torch.nn.Module = None
@@ -309,6 +315,7 @@ class ModelTemplate:
         self.traceback = None
 
     def GetHyp(self, name: str):
+        '''Get a hyperparameter value by it's name'''
         for hyp in self.json_data["hyperparameters"]:
             if hyp["name"] == name:
                 return hyp["value"]
@@ -341,6 +348,7 @@ class ModelTemplate:
             self.RaiseException(e)
 
     def RaiseException(self, e : Exception, traceback_str : str = None):
+        '''Raise an exception (stops training process and shows error in UI)'''
         self.error = e
         self.traceback = "".join(traceback.format_exception(type(e), e, e.__traceback__)) if not traceback_str else traceback_str
 
@@ -362,12 +370,14 @@ class Model:
 
 id_tracker = 0
 def GetID():
+    '''Get ID for new model'''
     global id_tracker
     id_tracker += 1
     return id_tracker
 
 class TrainingController:
     def __init__(self, model: Model) -> None:
+        '''Creates a new training session'''
         self.json_data = model.json_data
         self.model_class = model.model_class
         self.id = GetID()
@@ -455,6 +465,7 @@ class TrainingController:
         print(f"{self.error_str}\n{self.error_tb}", color=Colors.RED)
 
     def FormatTime(self, seconds: int) -> str:
+        '''String format time (ex. 130 seconds, )'''
         if seconds <= 0:
             return "0 seconds"
         

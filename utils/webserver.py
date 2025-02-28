@@ -1,17 +1,16 @@
-from fastapi.middleware.cors import CORSMiddleware # FastAPI Middleware
-from fastapi import FastAPI, Request, Body # FastAPI Framework and utilities
-from typing import Any # Used for type hinting
-import subprocess # Used for running commands in the terminal
-import threading # Used for running functions asynchronously
-import uvicorn # Used for running FastAPI
-import socket # Used for getting local IP
-import time # Used for timing
-import json # Used for parsing JSON
-import os # Used for file management
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Body
+from typing import Any
+import subprocess
+import threading
+import uvicorn
+import socket
+import json
+import os
 
-import utils.modules as modules # Modules and utilities for training models
-from utils.modules import print # Edited print function with color and reprint
-import utils.docs as docs # Start in-app docs
+import utils.modules as modules
+from utils.modules import print
+import utils.docs as docs
 
 CACHE_JSON = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache", "cache.json")
 
@@ -22,6 +21,12 @@ def SetModelLoader(loader : modules.ModelTypeLoader):
     model_loader = loader
 
 def GetWebData():
+    '''
+    Retreives IP address, frontend URL and webserver URL
+
+    Returns:
+        IP address, frontend URL and webserver URL (str, str, str)
+    '''
     try:
         sockets = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sockets.connect(("8.8.8.8", 80))
@@ -44,6 +49,7 @@ def GetWebData():
 
     return IP, frontend_url, webserver_url
 
+# Initialize FastAPI and add CORS
 app = FastAPI(title="Pyro Axis AI Training", 
     description="Webservers to handle connection between Torch train code and client",
     version="0.0.1")
@@ -61,6 +67,12 @@ client_ip = None
 training_started = False
 @app.get("/")
 async def root(request: Request):
+    '''
+    Returns the webserver URL and IP
+
+    Returns:
+        `{"status": "ok", "url": webserver_url, "ip": IP}`
+    '''
     global client_connected, client_ip
     client_ip = request.client.host
     client_connected = True
@@ -69,6 +81,12 @@ async def root(request: Request):
 
 @app.get("/models")
 async def models():
+    '''
+    Returns all models in the model loader
+
+    Returns:
+        `{"status": "ok", "models": [modules.Model.FrontendData(), ...]}`
+    '''
     global model_loader
     model_types = model_loader.GetModelTypes()
 
@@ -80,6 +98,12 @@ async def models():
 
 @app.post("/train")
 def train(data: Any = Body(...)):
+    '''
+    Trains a model
+
+    Returns:
+        `{"status": "ok"}`
+    '''
     global model_loader, training_controllers
 
     model_types = model_loader.GetModelTypes()
@@ -100,6 +124,13 @@ def train(data: Any = Body(...)):
 
 @app.get("/status")
 def status():
+    '''
+    Returns the status of all training controllers
+
+    Returns:
+        `{"status": "ok", "data": [modules.TrainingController.FrontendData(), ...]}`
+        `{"status": "error", "error": error, "traceback": traceback}`
+    '''
     global training_controllers
     data = []
     for training_controller in training_controllers:
@@ -113,12 +144,25 @@ def status():
 
 @app.get("/docs/start")
 def start_docs():
+    '''
+    Starts the documentation server
+
+    Returns:
+        `{"status": "ok"}`
+        `{"status": "error"}`
+    '''
     status = docs.run()
     if not status: return {"status": "error"}
     else: return {"status": "ok"}
 
 @app.get("/docs/stop")
 def stop_docs():
+    '''
+    Stops the documentation server
+
+    Returns:
+        `{"status": "ok"}`
+    '''
     docs.stop()
     return {"status": "ok"}
 
@@ -134,7 +178,7 @@ def start_frontend():
     subprocess.run("cd ui && npm run dev", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def run(frontend = True, backend = True, debug = False):
-    IP, frontend_url, webserver_url = GetWebData()
+    _, frontend_url, webserver_url = GetWebData()
     if backend:
         threading.Thread(target=start_backend, args=(debug,)).start()
     else:
