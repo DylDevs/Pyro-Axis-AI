@@ -494,7 +494,7 @@ export default function Index() {
                           </SelectContent>
                         </Select>
                       )}
-                      <Separator orientation="horizontal" className="bg-zinc-600 w-full my-3" />
+                      <Separator orientation="horizontal" className="bg-zinc-600 w-full mt-4 mb-3" />
                     </div>            
                 ))}
               </div>
