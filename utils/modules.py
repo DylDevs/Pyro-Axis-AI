@@ -656,23 +656,9 @@ class TrainingController:
                 "graphs": ui_data["graphs"],
                 "dropdowns": ui_data["dropdowns"],
             }
-            print(data)
             return data
         except Exception as e:
             self.error_str = str(e)
             self.error_tb = traceback.format_exc()
             if not self.error_tb: self.error_tb = "Traceback is not available"
             return None
-
-'''
-{
-           "title": "Learning Rate",
-           "description": "Learning rate over time",
-           "data": [
-               {
-                   "title": "Learning Rate",
-                   "color": "#0000ff",
-                   "values": "learning_rates"
-               }
-           ]
-        }'''

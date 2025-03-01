@@ -9,9 +9,7 @@ authors:
 # Home
 ---
 !!! warning
-This software is still in development and most likely will not work.
+This software is still in development, there may be bugs.
 !!!
 
-!!! info
-This documentation may not be fully up to date.
-!!!
+Welcome to the Pyro Axis AI Dashboard Docs. Here you will find information on general usage and using your own model architechtures with this software. Use the sidebar to look through topics.

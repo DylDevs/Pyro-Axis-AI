@@ -8,8 +8,8 @@ import os
 
 CACHE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 DEBUG_MODE = False
-WIDTH = 1300
-HEIGHT = 820
+WIDTH = 1440
+HEIGHT = 920
 IS_TRANSPARENT = False
 
 if not os.path.exists(CACHE):

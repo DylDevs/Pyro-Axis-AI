@@ -2,7 +2,6 @@
     "$schema": "../utils/schema.json",
     "name": "Generative Pretrained Transformer",
     "description": "Generates human like text based on a prompt",
-    "update_rate": 5,
     "functions_py": "gpt.py",
     "data_type": "text",
     "hyperparameters": [

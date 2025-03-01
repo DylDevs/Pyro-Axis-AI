@@ -4,7 +4,6 @@
     "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
-        "update_rate": { "type": "number" },
         "functions_py": { "type": "string", "pattern": ".+\\.py$" },
         "data_type": { "type": "string", "enum": ["text", "image", "audio", "other"] },
         "hyperparameters": {
@@ -90,5 +89,5 @@
             }
         }
     },
-    "required": ["name", "description", "update_rate", "functions_py", "data_type", "initialize_function", "train_function", "save_function"]
+    "required": ["name", "description", "functions_py", "data_type", "initialize_function", "train_function", "save_function"]
 }

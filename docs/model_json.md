@@ -9,7 +9,7 @@ authors:
 
 # JSON Model Definition
 ---
-To define models for training in PyroAxis, you must create a JSON file which includes data about your model, along with a python file that contains your initialize, train, and save functions. These are simple to make, you can have brand new model training in about 10 minutes!
+To define models for training in the dashboard, you must create a JSON file which includes data about your model, along with a python file that contains your initialize, train, and save functions. These are simple to make, you can have brand new model training in about 15 minutes!
 
 To start off, create a JSON file in the `model_types` directory. The first required thing in the file is the schema import:
 ```json
@@ -44,24 +44,11 @@ A short statement that describes your models function
     "description": "Generates human like text based on a prompt"
 }
 ```
-==- [!badge variant="ghost" text="Required"] update_rate
-**Description**\
-The amount of seconds between data updates
-!!!
-The minimum value is 0.25 seconds
-!!!
-
-**Example**
-```json
-{
-    "update_rate": 5
-}
-```
 ==- [!badge variant="ghost" text="Required"] functions_py
 **Description**\
 Path to the python file which contains your model functions. The path is relative to the model_types folder
 !!!
-The value must end with `.py` or an exception will be thrown
+The value must end with `.py`
 !!!
 
 **Example**
@@ -293,6 +280,19 @@ The value must be exact, for instance, if your definition line in Python is `def
     "save_function": "save_model"
 }
 ```
+==- [!badge variant="ghost" text="Optional"] after_train_function
+**Description**\
+Name of the function in your Python file which runs after the train function
+!!!
+The value must be exact, for instance, if your definition line in Python is `def after_train():`, refer to the example to see what it should be in JSON.
+!!!
+
+**Example**
+```json
+{
+    "save_function": "after_train"
+}
+```
 ==- [!badge variant="ghost" text="Optional"] progress_bars
 !!!
 To get an epoch or time progress bar, use `controller.epoch` or `controller.time`, the rest of the values will be ignored.
@@ -301,7 +301,7 @@ To get an epoch or time progress bar, use `controller.epoch` or `controller.time
 An array of dictionaries that each have information for a progress bar in the UI
 
 **Dictionary Values**
-+++ name
++++ title
 !!!
 This value is required
 !!!
@@ -313,7 +313,7 @@ The name of your progress bar. This will be displayed on the dashboard, so make 
 {
     "progress_bars" : [
         {
-            "name": "Patience"
+            "title": "Patience"
         }
     ]
 }
@@ -409,9 +409,121 @@ The text to display under the progress bar, it must have {0} and {1} as a placeh
 ```
 +++
 ==- [!badge variant="ghost" text="Optional"] graphs
-!!! Coming Soon
-I haven't yet found a good way to add this functionality in a clean and easy to use way. It will be added once the rest of the app is modular.
 !!!
+To get a training/validation loss graph, use `controller.loss`, the rest of the values will be ignored.
+!!!
+**Description**\
+An array of dictionaries that each have information for a graph in the UI
+
+**Dictionary Values**
++++ title
+!!!
+This value is required
+!!!
+**Description**\
+The name of your graph. This will be displayed on the dashboard, so make sure it is in title format.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "title": "Learning Rate"
+        }
+    ]
+}
+```
+\
++++ description
+!!!
+This value is optional
+!!!
+**Description**\
+A short description of your progress bar, this will be shown in a tooltip if defined.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "description": "Shows how many epochs the model has gone since the best epoch and how close it is to the patience value"
+        }
+    ]
+}
+```
++++ type
+!!!
+This value is required
+!!!
+**Description**\
+Whether the value is a `number` or `time` value. Any other value will result in an exception.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "type": "number"
+        }
+    ]
+}
+```
++++ current
+!!!
+This value is required
+!!!
+
+**Description**\
+Variable which defines the current progress value. There are 2 ways these values can be selected. The first way is stating a variable name which is part of your Model class. The second way is using `hyperparameter.` in front of a hyperparameter name. This value must be a number.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "current": "epochs_until_patience"
+        }
+    ]
+}
+```
++++ total
+!!!
+This value is required
+!!!
+
+**Description**\
+Variable which defines the max value. There are 2 ways these values can be selected. The first way is stating a variable name which is part of your Model class. The second way is using `hyperparameter.` in front of a hyperparameter name. This value must be a number.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "total": "hyperparameter.Patience"
+        }
+    ]
+}
+```
++++ progress_test
+!!!
+This value is required
+!!!
+
+**Description**\
+The text to display under the progress bar, it must have {0} and {1} as a placeholder for current and total values.
+
+**Example**
+```json
+{
+    "progress_bars" : [
+        {
+            "progress_text": "{0} epochs out of {1} until early stop"
+        }
+    ]
+}
+```
++++
+
 ==- [!badge variant="ghost" text="Optional"] info_dropdowns
 **Description**\
 An array of dictionaries that each have information for a dropdown with information about the model

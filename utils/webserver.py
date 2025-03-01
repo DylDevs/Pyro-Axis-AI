@@ -23,9 +23,6 @@ def SetModelLoader(loader : modules.ModelTypeLoader):
 def GetWebData():
     '''
     Retreives IP address, frontend URL and webserver URL
-
-    Returns:
-        IP address, frontend URL and webserver URL (str, str, str)
     '''
     try:
         sockets = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
